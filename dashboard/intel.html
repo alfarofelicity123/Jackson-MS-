@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jackson County MO – Motivated Seller Leads</title>
+<style>
+:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--bd:#ddd;--hd:#f3f3f3}
+@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eee;--mut:#999;--bd:#333;--hd:#222}}
+body{font:14px system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:16px}
+input{padding:6px 10px;width:260px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;margin-top:12px}
+th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:left;white-space:nowrap}th{background:var(--hd)}
+.m{color:var(--mut)}a{color:#2b7de9}
+</style></head><body>
+<h2>Jackson County, MO – Motivated Seller Leads</h2>
+<div class="m" id="meta">Loading…</div>
+<p><input id="q" placeholder="Filter by owner, type, address…"></p>
+<div class="w"><table><thead><tr><th>Score</th><th>Type</th><th>Filed</th><th>Owner</th><th>Property</th><th>Amount</th><th>Flags</th><th>Doc</th></tr></thead><tbody id="rows"></tbody></table></div>
+<script>
+let all=[];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function render(){
+  const q=document.getElementById("q").value.toLowerCase();
+  document.getElementById("rows").innerHTML=all.filter(r=>JSON.stringify(r).toLowerCase().includes(q)).map(r=>
+    `<tr><td><b>${r.score}</b></td><td>${esc(r.cat_label)}</td><td>${esc(r.filed)}</td><td>${esc(r.owner)}</td>
+    <td>${esc([r.prop_address,r.prop_city].filter(Boolean).join(", "))}</td>
+    <td>${r.amount?"$"+Number(r.amount).toLocaleString():""}</td><td>${esc((r.flags||[]).join(", "))}</td>
+    <td>${/^https?:/.test(r.clerk_url)?`<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">${esc(r.doc_num)}</a>`:esc(r.doc_num)}</td></tr>`).join("");
+}
+fetch("records.json").then(r=>r.json()).then(d=>{
+  all=d.records||[];
+  document.getElementById("meta").textContent=`${d.total} records · ${d.with_address} with address · ${d.date_range?.start||""} → ${d.date_range?.end||""} · updated ${d.fetched_at||"never"}`;
+  render();
+}).catch(()=>document.getElementById("meta").textContent="No data yet.");
+document.getElementById("q").addEventListener("input",render);
+</script></body></html>
