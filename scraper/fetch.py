@@ -69,16 +69,16 @@ COUNTY = "Jackson County"
 STATE = "MO"
 SOURCE = "Jackson County Recorder of Deeds"
 
-CLERK_URL = os.getenv("CLERK_URL", "https://share.google/pCyJoasg81A0yhRX3")
-CLERK_FALLBACK_URL = os.getenv("CLERK_FALLBACK_URL", "https://aumentumweb.jacksongov.org/")
-PARCEL_URL = os.getenv("PARCEL_URL", "").strip()  # unknown - see README notes
-PARCEL_LOCAL = os.getenv("PARCEL_LOCAL", "").strip()
-PARCEL_LINK_HINT = os.getenv("PARCEL_LINK_HINT", r"parcel|owner|cama|dbf|assess")
-LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS", "7"))
-CLERK_DATE_FMT = os.getenv("CLERK_DATE_FMT", "%m/%d/%Y")
-NAME_ORDER = os.getenv("NAME_ORDER", "FIRST_LAST").upper()
+CLERK_URL = (os.getenv("CLERK_URL") or "").strip() or "https://share.google/pCyJoasg81A0yhRX3"
+CLERK_FALLBACK_URL = (os.getenv("CLERK_FALLBACK_URL") or "").strip() or "https://aumentumweb.jacksongov.org/"
+PARCEL_URL = (os.getenv("PARCEL_URL") or "").strip()  # unknown - see README notes
+PARCEL_LOCAL = (os.getenv("PARCEL_LOCAL") or "").strip()
+PARCEL_LINK_HINT = os.getenv("PARCEL_LINK_HINT") or r"parcel|owner|cama|dbf|assess"
+LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS") or "7")
+CLERK_DATE_FMT = os.getenv("CLERK_DATE_FMT") or "%m/%d/%Y"
+NAME_ORDER = (os.getenv("NAME_ORDER") or "FIRST_LAST").upper()
 HEADLESS = os.getenv("HEADLESS", "1") != "0"
-MAX_PAGES = int(os.getenv("CLERK_MAX_PAGES", "30"))
+MAX_PAGES = int(os.getenv("CLERK_MAX_PAGES") or "30")
 RETRIES = 3
 UA = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
