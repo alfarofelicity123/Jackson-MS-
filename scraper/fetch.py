@@ -69,11 +69,13 @@ COUNTY = "Jackson County"
 STATE = "MO"
 SOURCE = "Jackson County Recorder of Deeds"
 
-CLERK_URL = (os.getenv("CLERK_URL") or "").strip() or "https://share.google/pCyJoasg81A0yhRX3"
-CLERK_FALLBACK_URL = (os.getenv("CLERK_FALLBACK_URL") or "").strip() or "https://aumentumweb.jacksongov.org/"
+CLERK_URL = (os.getenv("CLERK_URL") or "").strip() or "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx"
+CLERK_FALLBACK_URL = (os.getenv("CLERK_FALLBACK_URL") or "").strip() or "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx"
 PARCEL_URL = (os.getenv("PARCEL_URL") or "").strip()  # unknown - see README notes
 PARCEL_LOCAL = (os.getenv("PARCEL_LOCAL") or "").strip()
 PARCEL_LINK_HINT = os.getenv("PARCEL_LINK_HINT") or r"parcel|owner|cama|dbf|assess"
+CLERK_MODE = (os.getenv("CLERK_MODE") or "csv").lower()          # csv (default) | scrape
+CLERK_CSV = Path(os.getenv("CLERK_CSV") or (ROOT / "data" / "clerk_import.csv"))
 LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS") or "7")
 CLERK_DATE_FMT = os.getenv("CLERK_DATE_FMT") or "%m/%d/%Y"
 NAME_ORDER = (os.getenv("NAME_ORDER") or "FIRST_LAST").upper()
@@ -522,14 +524,19 @@ def normalise_raw(raw: Dict[str, Any], hint_code: Optional[str]) -> Optional[Dic
     if not doc_num:
         key = f"{doc_type}|{raw.get('grantor')}|{raw.get('filed')}|{raw.get('legal')}"
         doc_num = "X" + hashlib.md5(key.encode()).hexdigest()[:10].upper()
+    owner, grantee = clean(raw.get("grantor")), clean(raw.get("grantee"))
+    # lis pendens / foreclosure: the first party is usually the lender, so the
+    # homeowner is the other name - swap when only the first party looks corporate
+    if code in ("LP", "NOFC") and is_corp(owner) and grantee and not is_corp(grantee):
+        owner, grantee = grantee, owner
     return {
         "doc_num": doc_num,
         "doc_type": doc_type or CAT_LABEL[code],
         "filed": filed_dt.strftime("%Y-%m-%d") if filed_dt else "",
         "cat": code,
         "cat_label": CAT_LABEL[code],
-        "owner": clean(raw.get("grantor")),
-        "grantee": clean(raw.get("grantee")),
+        "owner": owner,
+        "grantee": grantee,
         "amount": parse_amount(raw.get("amount")),
         "legal": clean(raw.get("legal")),
         "clerk_url": raw.get("_link") or CLERK_FALLBACK_URL,
@@ -545,6 +552,40 @@ def dedupe(records: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
             out.append(r)
     return out
 
+
+
+def load_clerk_csv(path: Path) -> List[Dict[str, Any]]:
+    """
+    Read a CSV you exported/copied from the recorder search. Column names are
+    matched loosely (Document Number, Document Type, Recorded Date, Grantor,
+    Grantee, Legal Description, Amount; optional URL/Link column).
+    """
+    if not path.exists():
+        return []
+    out: List[Dict[str, Any]] = []
+    with path.open("r", newline="", encoding="utf-8-sig", errors="replace") as fh:
+        rd = csv.reader(fh)
+        try:
+            headers = [clean(h) for h in next(rd)]
+        except StopIteration:
+            return []
+        colmap = map_headers([h.lower() for h in headers])
+        link_idx = next((i for i, h in enumerate(headers) if re.search(r"url|link", h, re.I)), None)
+        if "doc_type" not in colmap:
+            log.error("CSV needs a document-type column; headers seen: %s", headers)
+            return []
+        for row in rd:
+            try:
+                raw = {f: clean(row[i]) for f, i in colmap.items() if i < len(row)}
+                link = clean(row[link_idx]) if link_idx is not None and link_idx < len(row) else ""
+                raw["_link"] = link if link.startswith("http") else ""
+                rec = normalise_raw(raw, None)
+                if rec:
+                    out.append(rec)
+            except Exception as e:  # noqa: BLE001
+                log.debug("csv row skipped: %s", e)
+    log.info("Loaded %d lead rows from %s", len(out), path)
+    return dedupe(out)
 
 # --------------------------------------------------------------------------- #
 # Parcel / property appraiser bulk data (requests + BeautifulSoup + dbfread)
@@ -892,9 +933,14 @@ async def run(days: int) -> Dict[str, Any]:
 
     records: List[Dict[str, Any]] = []
     try:
-        records = await scrape_clerk(start, end)
+        if CLERK_MODE == "scrape":
+            records = await scrape_clerk(start, end)
+        else:
+            records = load_clerk_csv(CLERK_CSV)
+            if not records:
+                log.warning("No leads: put your exported CSV at %s (see README note)", CLERK_CSV)
     except Exception as e:  # noqa: BLE001
-        log.error("Clerk scrape crashed: %s", e)
+        log.error("Clerk step crashed: %s", e)
 
     # drop anything outside the lookback window (portal filters are sometimes loose)
     keep = []
