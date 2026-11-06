@@ -1,34 +1,203 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jackson County MO – Motivated Seller Leads</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jackson County · Motivated Seller Intelligence</title>
 <style>
-:root{--bg:#fff;--fg:#1a1a1a;--mut:#666;--bd:#ddd;--hd:#f3f3f3}
-@media(prefers-color-scheme:dark){:root{--bg:#161616;--fg:#eee;--mut:#999;--bd:#333;--hd:#222}}
-body{font:14px system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:16px}
-input{padding:6px 10px;width:260px;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:6px}
-.w{overflow-x:auto}table{border-collapse:collapse;width:100%;margin-top:12px}
-th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:left;white-space:nowrap}th{background:var(--hd)}
-.m{color:var(--mut)}a{color:#2b7de9}
-</style></head><body>
-<h2>Jackson County, MO – Motivated Seller Leads</h2>
-<div class="m" id="meta">Loading…</div>
-<p><input id="q" placeholder="Filter by owner, type, address…"></p>
-<div class="w"><table><thead><tr><th>Score</th><th>Type</th><th>Filed</th><th>Owner</th><th>Property</th><th>Amount</th><th>Flags</th><th>Doc</th></tr></thead><tbody id="rows"></tbody></table></div>
+:root{--bg:#0f1318;--panel:#171c23;--panel2:#1c222b;--bd:#262d38;--fg:#e8ecf1;--mut:#7f8a99;
+--blue:#4da3ff;--red:#ff6b6b;--purple:#9b8cff;--orange:#ffa94d;--green:#4ade80;--cyan:#38bdf8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+padding:18px 28px;border-bottom:1px solid var(--bd);background:#0c1015}
+header h1{margin:0;font-size:13px;letter-spacing:.14em;font-weight:600;color:#b8c2d0}
+#range{color:var(--mut);font-size:11px;border:1px solid var(--bd);padding:5px 10px;border-radius:4px}
+main{max-width:1300px;margin:0 auto;padding:24px 28px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--bd);border-left:3px solid var(--c,var(--blue));border-radius:6px;padding:16px}
+.card .l{font-size:10px;letter-spacing:.16em;color:var(--mut)}
+.card .n{font-size:30px;font-weight:700;margin-top:6px}
+.card .s{font-size:10px;color:#556070;margin-top:4px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0 14px}
+input,select,button{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:5px;
+padding:9px 12px;font:inherit}
+input{min-width:230px}
+button{cursor:pointer;letter-spacing:.08em}
+button:hover{border-color:var(--blue)}
+#count{margin-left:auto;color:var(--mut)}
+.wrap{background:var(--panel);border:1px solid var(--bd);border-radius:6px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:14px 14px;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid #1f2630;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:var(--panel2)}
+.sc{display:inline-block;min-width:34px;text-align:center;padding:5px 7px;border-radius:4px;font-weight:700;
+background:#232b37;color:#cfd8e3}
+.sc.hot{background:#3a1d1d;color:var(--red)}.sc.warm{background:#3a2e17;color:var(--orange)}
+.tp{display:inline-block;padding:4px 9px;border-radius:4px;font-size:11px;background:#222c3b;color:#a9c4ec;border:1px solid #2f3d52}
+.own b{display:block;font-size:13px}.own span{color:var(--mut);font-size:11px}
+.chip{display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;border-radius:4px;font-size:11px;
+background:#1f2a3a;color:#a9c4ec;border:1px solid #2f3d52}
+.chip.new{background:#17301f;color:#7be59c;border-color:#245c37}
+.chip.warn{background:#3a1d1d;color:#ff9a9a;border-color:#5c2b2b}
+.mut{color:var(--mut)}a{color:var(--blue);text-decoration:none;letter-spacing:.08em;font-size:11px}
+a:hover{text-decoration:underline}
+.empty{padding:30px;text-align:center;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <h1>JACKSON COUNTY · MOTIVATED SELLER INTELLIGENCE</h1>
+  <div id="range">loading…</div>
+</header>
+<main>
+  <section class="cards" id="cards"></section>
+
+  <div class="bar">
+    <input id="q" placeholder="Search owner, address, doc #…">
+    <select id="type">
+      <option value="">All Types</option>
+      <option value="pre">Pre-foreclosure</option>
+      <option value="jud">Judgments</option>
+      <option value="lien">Liens</option>
+      <option value="pro">Probate</option>
+      <option value="other">Other</option>
+    </select>
+    <select id="score">
+      <option value="0">All Scores</option>
+      <option value="70">Hot (70+)</option>
+      <option value="50">Warm (50+)</option>
+    </select>
+    <select id="addr">
+      <option value="">Address: All</option>
+      <option value="yes">Has address</option>
+      <option value="no">No address</option>
+    </select>
+    <button id="ghl">↓ GHL CSV</button>
+    <button id="clear">✕ CLEAR</button>
+    <span id="count"></span>
+  </div>
+
+  <div class="wrap">
+    <table>
+      <thead><tr><th>SCORE</th><th>TYPE</th><th>OWNER / PROPERTY</th><th>FILED</th><th>AMOUNT</th><th>FLAGS</th><th>DOC</th><th>LINK</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+
 <script>
-let all=[];
-const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-function render(){
-  const q=document.getElementById("q").value.toLowerCase();
-  document.getElementById("rows").innerHTML=all.filter(r=>JSON.stringify(r).toLowerCase().includes(q)).map(r=>
-    `<tr><td><b>${r.score}</b></td><td>${esc(r.cat_label)}</td><td>${esc(r.filed)}</td><td>${esc(r.owner)}</td>
-    <td>${esc([r.prop_address,r.prop_city].filter(Boolean).join(", "))}</td>
-    <td>${r.amount?"$"+Number(r.amount).toLocaleString():""}</td><td>${esc((r.flags||[]).join(", "))}</td>
-    <td>${/^https?:/.test(r.clerk_url)?`<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">${esc(r.doc_num)}</a>`:esc(r.doc_num)}</td></tr>`).join("");
+let DATA = {records: []};
+
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+const group = r => {
+  const c = r.cat || "";
+  if (c === "LP" || c === "NOFC") return "pre";
+  if (["JUD","CCJ","DRJUD"].includes(c)) return "jud";
+  if (c.startsWith("LN") || c === "MEDLN") return "lien";
+  if (c === "PRO") return "pro";
+  return "other";
+};
+const hasAddr = r => !!(r.prop_address || r.mail_address);
+const $ = id => document.getElementById(id);
+
+function cards(rs) {
+  const n = g => rs.filter(r => group(r) === g).length;
+  const items = [
+    ["TOTAL LEADS", rs.length, "this period", "#4da3ff"],
+    ["PRE-FORECLOSURE", n("pre"), "LP / NOFC", "#ff6b6b"],
+    ["JUDGMENTS", n("jud"), "JUD / CCJ / DRJUD", "#9b8cff"],
+    ["LIENS", n("lien"), "LN / IRS / MECH / HOA", "#ffa94d"],
+    ["PROBATE", n("pro"), "PRO docs", "#4da3ff"],
+    ["WITH ADDRESS", rs.filter(hasAddr).length, "parcel matched", "#4ade80"],
+    ["HOT LEADS ≥70", rs.filter(r => r.score >= 70).length, "score 70+", "#38bdf8"],
+  ];
+  $("cards").innerHTML = items.map(([l, v, s, c]) =>
+    `<div class="card" style="--c:${c}"><div class="l">${l}</div><div class="n">${v}</div><div class="s">${s}</div></div>`).join("");
 }
-fetch("records.json").then(r=>r.json()).then(d=>{
-  all=d.records||[];
-  document.getElementById("meta").textContent=`${d.total} records · ${d.with_address} with address · ${d.date_range?.start||""} → ${d.date_range?.end||""} · updated ${d.fetched_at||"never"}`;
+
+function filtered() {
+  const q = $("q").value.toLowerCase().trim();
+  const t = $("type").value, s = +$("score").value, a = $("addr").value;
+  return DATA.records.filter(r =>
+    (!t || group(r) === t) &&
+    (r.score || 0) >= s &&
+    (!a || (a === "yes") === hasAddr(r)) &&
+    (!q || [r.owner, r.grantee, r.doc_num, r.prop_address, r.mail_address, r.legal, r.cat_label]
+        .join(" ").toLowerCase().includes(q)));
+}
+
+function render() {
+  const rs = filtered();
+  $("count").textContent = rs.length + " records";
+  if (!rs.length) {
+    $("rows").innerHTML = `<tr><td colspan="8" class="empty">No records match.</td></tr>`;
+    return;
+  }
+  $("rows").innerHTML = rs.map(r => {
+    const sc = r.score >= 70 ? "hot" : r.score >= 50 ? "warm" : "";
+    const prop = [r.prop_address, r.prop_city].filter(Boolean).join(", ") || r.legal || "";
+    const flags = (r.flags || []).map(f =>
+      `<span class="chip ${f === "New this week" ? "new" : /foreclosure|Lis pendens/.test(f) ? "warn" : ""}">${esc(f)}</span>`).join("");
+    const amt = r.amount ? "$" + Number(r.amount).toLocaleString() : "—";
+    const link = /^https?:\/\//.test(r.clerk_url || "")
+      ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">VIEW →</a>` : "";
+    return `<tr>
+      <td><span class="sc ${sc}">${esc(r.score)}</span></td>
+      <td><span class="tp">${esc(r.cat_label)}</span></td>
+      <td class="own"><b>${esc(r.owner)}</b><span>${esc(prop)}</span></td>
+      <td class="mut">${esc(r.filed)}</td>
+      <td class="mut">${amt}</td>
+      <td>${flags}</td>
+      <td class="mut">${esc(r.doc_num)}</td>
+      <td>${link}</td></tr>`;
+  }).join("");
+}
+
+/* ---------- GHL CSV (built in the browser from the records shown) ---------- */
+const CORP = /\b(LLC|INC|CORP|CORPORATION|CO|COMPANY|LTD|LP|LLP|TRUST|HOLDINGS|PROPERTIES|INVESTMENTS|ENTERPRISES|PARTNERS|BANK|ASSOCIATION|REALTY|GROUP|FUND)\b/i;
+function splitName(o) {
+  o = (o || "").trim();
+  if (!o) return ["", ""];
+  if (CORP.test(o)) return ["", o];
+  if (o.includes(",")) { const [l, f] = o.split(",", 2); return [f.trim(), l.trim()]; }
+  const t = o.split(/\s+/);
+  return t.length === 1 ? ["", t[0]] : [t.slice(0, -1).join(" "), t[t.length - 1]];
+}
+const csvCell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+function downloadGHL() {
+  const cols = ["First Name","Last Name","Mailing Address","Mailing City","Mailing State","Mailing Zip",
+    "Property Address","Property City","Property State","Property Zip","Lead Type","Document Type",
+    "Date Filed","Document Number","Amount/Debt Owed","Seller Score","Motivated Seller Flags","Source","Public Records URL"];
+  const rows = filtered().map(r => {
+    const [f, l] = splitName(r.owner);
+    return [f, l, r.mail_address, r.mail_city, r.mail_state, r.mail_zip,
+      r.prop_address, r.prop_city, r.prop_state, r.prop_zip, r.cat_label, r.doc_type,
+      r.filed, r.doc_num, r.amount || "", r.score, (r.flags || []).join("; "),
+      "Jackson County Recorder of Deeds", r.clerk_url];
+  });
+  const csv = [cols, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = "ghl_export.csv";
+  a.click();
+}
+
+["q","type","score","addr"].forEach(id => $(id).addEventListener("input", render));
+$("clear").onclick = () => { $("q").value = ""; $("type").value = ""; $("score").value = "0"; $("addr").value = ""; render(); };
+$("ghl").onclick = downloadGHL;
+
+fetch("records.json", {cache: "no-store"}).then(r => r.json()).then(d => {
+  DATA = d;
+  DATA.records = (d.records || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  const dr = d.date_range || {};
+  $("range").textContent = (dr.start || "") + " → " + (dr.end || "");
+  cards(DATA.records);
   render();
-}).catch(()=>document.getElementById("meta").textContent="No data yet.");
-document.getElementById("q").addEventListener("input",render);
-</script></body></html>
+}).catch(() => { $("range").textContent = "no data yet"; cards([]); render(); });
+</script>
+</body>
+</html>
