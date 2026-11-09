@@ -1,39 +1,13 @@
 {
-  "fetched_at": "2026-11-08T07:54:58+00:00",
+  "fetched_at": "2026-11-09T08:22:19+00:00",
   "source": "Jackson County Recorder of Deeds - Jackson County, MO",
   "date_range": {
-    "start": "2026-11-01",
-    "end": "2026-11-08"
+    "start": "2026-11-02",
+    "end": "2026-11-09"
   },
   "total": 4,
   "with_address": 0,
   "records": [
-    {
-      "doc_num": "2026E0081919",
-      "doc_type": "LIS PENDENS/NOTICE",
-      "filed": "2026-11-02",
-      "cat": "LP",
-      "cat_label": "Lis Pendens",
-      "owner": "MILLSAP & SINGER LLC",
-      "grantee": "MILLSAP & SINGER LLC",
-      "amount": null,
-      "legal": "BLUE SPRINGS KEYSTONE ESTATES LOT 282-346 I33/92 BL LT 293 - 293",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "",
-      "mail_zip": "",
-      "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
-      "flags": [
-        "Lis pendens",
-        "LLC / corp owner",
-        "New this week"
-      ],
-      "score": 65
-    },
     {
       "doc_num": "2026E0082740",
       "doc_type": "LIS PENDENS/NOTICE",
@@ -108,6 +82,31 @@
         "New this week"
       ],
       "score": 55
+    },
+    {
+      "doc_num": "2026E0081919",
+      "doc_type": "LIS PENDENS/NOTICE",
+      "filed": "2026-11-02",
+      "cat": "LP",
+      "cat_label": "Lis Pendens",
+      "owner": "MILLSAP & SINGER LLC",
+      "grantee": "MILLSAP & SINGER LLC",
+      "amount": null,
+      "legal": "BLUE SPRINGS KEYSTONE ESTATES LOT 282-346 I33/92 BL LT 293 - 293",
+      "prop_address": "",
+      "prop_city": "",
+      "prop_state": "",
+      "prop_zip": "",
+      "mail_address": "",
+      "mail_city": "",
+      "mail_state": "",
+      "mail_zip": "",
+      "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
+      "flags": [
+        "Lis pendens",
+        "LLC / corp owner"
+      ],
+      "score": 50
     }
   ]
 }
