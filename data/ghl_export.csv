@@ -1,5 +1,12 @@
 First Name,Last Name,Mailing Address,Mailing City,Mailing State,Mailing Zip,Property Address,Property City,Property State,Property Zip,Lead Type,Document Type,Date Filed,Document Number,Amount/Debt Owed,Seller Score,Motivated Seller Flags,Source,Public Records URL
-Egbadon,Alfredo,,,,,,,,,Lis Pendens,LIS PENDENS/NOTICE,2026-11-05,2026E0082740,,55,Lis pendens; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
-Roberson Joetta,L,,,,,,,,,Lis Pendens,LIS PENDENS/NOTICE,2026-11-05,2026E0082720,,55,Lis pendens; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
-Cortes Remigio C,Ii,,,,,,,,,Lis Pendens,LIS PENDENS/NOTICE,2026-11-05,2026E0082618,,55,Lis pendens; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
-,MILLSAP & SINGER LLC,,,,,,,,,Lis Pendens,LIS PENDENS/NOTICE,2026-11-02,2026E0081919,,50,Lis pendens; LLC / corp owner,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Remigio C,Cortes,,,,,,,,,Lis Pendens,LP,2026-11-05,2026E0082618,,65,Lis pendens; Probate / estate; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+,REAL DEAL ADVISORS LLC,,,,,,,,,Judgment,JUDG,2026-11-04,2026E0082403,,65,Judgment lien; LLC / corp owner; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Christopher,Shaw,,,,,,,,,Judgment,JUDG,2026-11-05,2026E0082832,,55,Judgment lien; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Alfredo,Egbadon,,,,,,,,,Lis Pendens,LP,2026-11-05,2026E0082740,,55,Lis pendens; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Joetta L,Roberson,,,,,,,,,Lis Pendens,LP,2026-11-05,2026E0082720,,55,Lis pendens; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Tiffany,Davis,,,,,,,,,Judgment,JUDG,2026-11-04,2026E0082439,,55,Judgment lien; New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Cassie Jo,Perry,,,,,,,,,HOA Lien,LIEN,2026-11-06,2026E0083150,,45,New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Karen,Messerli,,,,,,,,,HOA Lien,LIEN,2026-11-05,2026E0082870,,45,New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Artis L,Clark,,,,,,,,,Lien,LIEN,2026-11-04,2026E0082289,,45,New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Howard Preston,Fuqua,,,,,,,,,Lien,LIEN,2026-11-04,2026E0082283,,45,New this week,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
+Valma A S,Ealey,,,,,,,,,Medicaid Lien,LIEN,2026-11-03,2026E0081959,,30,,Jackson County Recorder of Deeds,https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx
