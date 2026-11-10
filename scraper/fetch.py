@@ -63,6 +63,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DASHBOARD_JSON = ROOT / "dashboard" / "records.json"
 DATA_JSON = ROOT / "data" / "records.json"
 GHL_CSV = ROOT / "data" / "ghl_export.csv"
+ENRICH_CSV = ROOT / "data" / "enrichment.csv"
 DEBUG_DIR = ROOT / "data" / "debug"
 
 COUNTY = "Jackson County"
@@ -792,6 +793,65 @@ def enrich(records: List[Dict[str, Any]], lookup: Dict[str, Dict[str, str]]) -> 
             log.debug("enrich failed for %s: %s", r.get("doc_num"), e)
 
 
+
+_ENRICH_KEYS = {
+    "documentnumber": "doc_num", "docnum": "doc_num", "instrument": "doc_num", "instrumentnumber": "doc_num",
+    "owner": "owner",
+    "propertyaddress": "prop_address", "propertycity": "prop_city", "propertystate": "prop_state",
+    "propertyzip": "prop_zip", "mailingaddress": "mail_address", "mailingcity": "mail_city",
+    "mailingstate": "mail_state", "mailingzip": "mail_zip", "amount": "amount",
+}
+
+
+def load_enrichment(path: Path = ENRICH_CSV) -> Tuple[Dict[str, Dict[str, str]], Dict[str, Dict[str, str]]]:
+    """Hand-entered property/mailing details. Returns (by_doc_num, by_owner)."""
+    by_doc: Dict[str, Dict[str, str]] = {}
+    by_owner: Dict[str, Dict[str, str]] = {}
+    if not path.exists():
+        return by_doc, by_owner
+    try:
+        with path.open("r", newline="", encoding="utf-8-sig", errors="replace") as fh:
+            for row in csv.DictReader(fh):
+                try:
+                    rec: Dict[str, str] = {}
+                    for k, v in row.items():
+                        key = _ENRICH_KEYS.get(re.sub(r"[^a-z]", "", (k or "").lower()))
+                        if key and clean(v):
+                            rec[key] = clean(v)
+                    doc, own = rec.pop("doc_num", ""), rec.pop("owner", "")
+                    if not rec:
+                        continue
+                    if doc:
+                        by_doc[doc] = rec
+                    elif own:
+                        by_owner[norm_name(own)] = rec
+                except Exception as e:  # noqa: BLE001
+                    log.debug("enrichment row skipped: %s", e)
+    except Exception as e:  # noqa: BLE001
+        log.error("Could not read %s: %s", path, e)
+    log.info("Enrichment rows: %d by doc, %d by owner", len(by_doc), len(by_owner))
+    return by_doc, by_owner
+
+
+def apply_enrichment(records: List[Dict[str, Any]]) -> None:
+    by_doc, by_owner = load_enrichment()
+    for r in records:
+        try:
+            e = by_doc.get(r["doc_num"]) or by_owner.get(norm_name(r.get("owner", "")))
+            if not e:
+                continue
+            for k, v in e.items():
+                if k == "amount":
+                    amt = parse_amount(v)
+                    if amt:
+                        r["amount"] = amt
+                else:
+                    r[k] = v
+            if r.get("prop_address") and not r.get("prop_state"):
+                r["prop_state"] = STATE
+        except Exception as ex:  # noqa: BLE001
+            log.debug("apply_enrichment failed: %s", ex)
+
 # --------------------------------------------------------------------------- #
 # Flags + scoring
 # --------------------------------------------------------------------------- #
@@ -980,6 +1040,7 @@ async def run(days: int) -> Dict[str, Any]:
         log.error("Parcel step failed: %s", e)
 
     enrich(records, lookup)
+    apply_enrichment(records)
     score_all(records, new_cutoff)
     records = finalise(records)
     records.sort(key=lambda r: r["score"], reverse=True)
