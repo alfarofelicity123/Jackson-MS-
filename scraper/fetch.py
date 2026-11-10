@@ -101,7 +101,7 @@ log = logging.getLogger("scraper")
 # ORDER MATTERS: first match wins (specific before generic).
 LEAD_TYPES: List[Tuple[str, str, str]] = [
     ("RELLP", "Release Lis Pendens", r"release.*lis\s*pendens|rel.*\blp\b|lis\s*pendens.*release"),
-    ("LP", "Lis Pendens", r"lis\s*pendens"),
+    ("LP", "Lis Pendens", r"lis\s*pendens|^\s*lp\s*$"),
     ("NOFC", "Notice of Foreclosure",
      r"notice of (foreclosure|trustee'?s?\s*sale|sale)|foreclos|trustee'?s?\s*sale"),
     ("TAXDEED", "Tax Deed", r"tax\s*deed|collector'?s?\s*deed|sheriff'?s?\s*deed.*tax"),
@@ -117,7 +117,7 @@ LEAD_TYPES: List[Tuple[str, str, str]] = [
     ("MEDLN", "Medicaid Lien", r"medicaid|medical assistance|mo\s*healthnet"),
     ("LN", "Lien", r"\blien\b"),
     ("PRO", "Probate Documents",
-     r"probate|letters\s*(testamentary|of administration)|estate of|small estate"),
+     r"probate|^\s*prob\s*$|letters\s*(testamentary|of administration)|estate of|small estate"),
     ("NOC", "Notice of Commencement", r"notice of commencement"),
 ]
 LEAD_RX = [(c, l, re.compile(rx, re.I)) for c, l, rx in LEAD_TYPES]
@@ -128,9 +128,17 @@ TAX_CATS = {"LNCORPTX", "LNIRS", "LNFED", "TAXDEED"}
 CORP_RX = re.compile(
     r"\b(LLC|L\.L\.C|INC|INCORPORATED|CORP|CORPORATION|CO|COMPANY|LTD|LP|LLP|"
     r"TRUST|HOLDINGS|PROPERTIES|INVESTMENTS|ENTERPRISES|PARTNERS|PARTNERSHIP|"
-    r"BANK|ASSOCIATION|ASSN|REALTY|VENTURES|GROUP|FUND)\b",
+    r"BANK|ASSOCIATION|ASSN|REALTY|VENTURES|GROUP|FUND|FUNDERS|CAPITAL|SERVICING|MORTGAGE|"
+    r"ANNUITY|INSURANCE|DIVISION|CITY OF|STATE OF|CONDOMINIUM|HOMEOWNERS|NATIONAL|CONSULTING|"
+    r"PROTECTION|RENTAL|RENTALS|LIVING|HOMES|DUPLEXES|CITY)\b",
     re.I,
 )
+
+
+ESTATE_RX = re.compile(r"(?<!REAL )\bESTATE$|\bDECEASED\b|\bDESC\b|\bDEC'?D\b|\bESTATE OF\b", re.I)
+HOA_RX = re.compile(r"homeowners|home owners|owners ass|association|assn", re.I)
+MEDICAID_RX = re.compile(r"health\s*net|medicaid|medical assistance", re.I)
+SWAP_CATS = ("LP", "NOFC", "JUD", "CCJ", "DRJUD")
 
 
 def classify(doc_type_text: str) -> Optional[str]:
@@ -525,9 +533,15 @@ def normalise_raw(raw: Dict[str, Any], hint_code: Optional[str]) -> Optional[Dic
         key = f"{doc_type}|{raw.get('grantor')}|{raw.get('filed')}|{raw.get('legal')}"
         doc_num = "X" + hashlib.md5(key.encode()).hexdigest()[:10].upper()
     owner, grantee = clean(raw.get("grantor")), clean(raw.get("grantee"))
-    # lis pendens / foreclosure: the first party is usually the lender, so the
-    # homeowner is the other name - swap when only the first party looks corporate
-    if code in ("LP", "NOFC") and is_corp(owner) and grantee and not is_corp(grantee):
+    # generic "LIEN": use the lienholder to tell HOA / Medicaid liens apart
+    if code == "LN":
+        if MEDICAID_RX.search(grantee):
+            code = "MEDLN"
+        elif HOA_RX.search(grantee):
+            code = "LNHOA"
+    # lis pendens / foreclosure / judgments: the first party is often the lender or
+    # creditor, so when only that name looks institutional the other name is the owner
+    if code in SWAP_CATS and is_corp(owner) and grantee and not is_corp(grantee):
         owner, grantee = grantee, owner
     return {
         "doc_num": doc_num,
@@ -794,7 +808,7 @@ def compute_flags(r: Dict[str, Any], new_cutoff: datetime) -> List[str]:
         flags.append("Tax lien")
     if c == "LNMECH":
         flags.append("Mechanic lien")
-    if c == "PRO":
+    if c == "PRO" or ESTATE_RX.search(r.get("owner", "")) or ESTATE_RX.search(r.get("grantee", "")):
         flags.append("Probate / estate")
     if is_corp(r.get("owner", "")):
         flags.append("LLC / corp owner")
