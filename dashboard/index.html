@@ -16,6 +16,9 @@ header h1{margin:0;font-size:13px;letter-spacing:.14em;font-weight:600;color:#b8
 main{max-width:1300px;margin:0 auto;padding:24px 28px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
 .card{background:var(--panel);border:1px solid var(--bd);border-left:3px solid var(--c,var(--blue));border-radius:6px;padding:16px}
+button.card{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
+button.card:hover{background:var(--panel2);border-color:#35404f;border-left-color:var(--c)}
+button.card.active{background:#1d2633;box-shadow:0 0 0 1px var(--c) inset}
 .card .l{font-size:10px;letter-spacing:.16em;color:var(--mut)}
 .card .n{font-size:30px;font-weight:700;margin-top:6px}
 .card .s{font-size:10px;color:#556070;margin-top:4px}
@@ -107,16 +110,35 @@ const $ = id => document.getElementById(id);
 function cards(rs) {
   const n = g => rs.filter(r => group(r) === g).length;
   const items = [
-    ["TOTAL LEADS", rs.length, "this period", "#4da3ff"],
-    ["PRE-FORECLOSURE", n("pre"), "LP / NOFC", "#ff6b6b"],
-    ["JUDGMENTS", n("jud"), "JUD / CCJ / DRJUD", "#9b8cff"],
-    ["LIENS", n("lien"), "LN / IRS / MECH / HOA", "#ffa94d"],
-    ["PROBATE", n("pro"), "PRO docs", "#4da3ff"],
-    ["WITH ADDRESS", rs.filter(hasAddr).length, "parcel matched", "#4ade80"],
-    ["HOT LEADS ≥70", rs.filter(r => r.score >= 70).length, "score 70+", "#38bdf8"],
+    ["total", "TOTAL LEADS", rs.length, "click to show all", "#4da3ff"],
+    ["pre", "PRE-FORECLOSURE", n("pre"), "LP / NOFC", "#ff6b6b"],
+    ["jud", "JUDGMENTS", n("jud"), "JUD / CCJ / DRJUD", "#9b8cff"],
+    ["lien", "LIENS", n("lien"), "LN / IRS / MECH / HOA", "#ffa94d"],
+    ["pro", "PROBATE", n("pro"), "PRO docs", "#4da3ff"],
+    ["addr", "WITH ADDRESS", rs.filter(hasAddr).length, "parcel matched", "#4ade80"],
+    ["hot", "HOT LEADS ≥70", rs.filter(r => r.score >= 70).length, "score 70+", "#38bdf8"],
   ];
-  $("cards").innerHTML = items.map(([l, v, s, c]) =>
-    `<div class="card" style="--c:${c}"><div class="l">${l}</div><div class="n">${v}</div><div class="s">${s}</div></div>`).join("");
+  $("cards").innerHTML = items.map(([k, l, v, s, c]) =>
+    `<button type="button" class="card" data-k="${k}" style="--c:${c}"><div class="l">${l}</div><div class="n">${v}</div><div class="s">${s}</div></button>`).join("");
+  document.querySelectorAll("#cards .card").forEach(el => el.onclick = () => clickCard(el.dataset.k));
+}
+
+function activeKey() {
+  if ($("type").value) return $("type").value;
+  if (+$("score").value >= 70) return "hot";
+  if ($("addr").value === "yes") return "addr";
+  return "total";
+}
+
+function clickCard(k) {
+  const same = k === activeKey() && k !== "total";
+  $("type").value = ""; $("score").value = "0"; $("addr").value = "";
+  if (!same) {
+    if (["pre", "jud", "lien", "pro"].includes(k)) $("type").value = k;
+    else if (k === "hot") $("score").value = "70";
+    else if (k === "addr") $("addr").value = "yes";
+  }
+  render();
 }
 
 function filtered() {
@@ -133,6 +155,8 @@ function filtered() {
 function render() {
   const rs = filtered();
   $("count").textContent = rs.length + " records";
+  const ak = activeKey();
+  document.querySelectorAll("#cards .card").forEach(el => el.classList.toggle("active", el.dataset.k === ak));
   if (!rs.length) {
     $("rows").innerHTML = `<tr><td colspan="8" class="empty">No records match.</td></tr>`;
     return;
