@@ -78,7 +78,7 @@ CLERK_MODE = (os.getenv("CLERK_MODE") or "csv").lower()          # csv (default)
 CLERK_CSV = Path(os.getenv("CLERK_CSV") or (ROOT / "data" / "clerk_import.csv"))
 LOOKBACK_DAYS = int(os.getenv("LOOKBACK_DAYS") or "7")
 CLERK_DATE_FMT = os.getenv("CLERK_DATE_FMT") or "%m/%d/%Y"
-NAME_ORDER = (os.getenv("NAME_ORDER") or "FIRST_LAST").upper()
+NAME_ORDER = (os.getenv("NAME_ORDER") or "LAST_FIRST").upper()
 HEADLESS = os.getenv("HEADLESS", "1") != "0"
 MAX_PAGES = int(os.getenv("CLERK_MAX_PAGES") or "30")
 RETRIES = 3
@@ -883,21 +883,27 @@ def write_outputs(records: List[Dict[str, Any]], start: datetime, end: datetime)
     return payload
 
 
+_NAME_DROP = {"ESTATE", "DECEASED", "DESC", "DECD", "DEC'D", "JR", "SR", "II", "III", "IV", "I"}
+
+
 def split_name(owner: str) -> Tuple[str, str]:
+    """Return (first, last). County index names are LAST FIRST [MIDDLE] by default."""
     o = clean(owner)
     if not o:
         return "", ""
     if is_corp(o):
-        return "", o
+        return "", o.title() if not o.isupper() else o
     if "," in o:
         last, first = [p.strip() for p in o.split(",", 1)]
         return first.title(), last.title()
-    toks = o.split()
+    toks = [t for t in o.upper().replace(".", "").split() if t not in _NAME_DROP]
+    if not toks:
+        return "", o.title()
     if len(toks) == 1:
         return "", toks[0].title()
-    if NAME_ORDER == "LAST_FIRST":
-        return " ".join(toks[1:]).title(), toks[0].title()
-    return " ".join(toks[:-1]).title(), toks[-1].title()
+    if NAME_ORDER == "FIRST_LAST":
+        return " ".join(toks[:-1]).title(), toks[-1].title()
+    return " ".join(toks[1:]).title(), toks[0].title()
 
 
 GHL_COLUMNS = [
