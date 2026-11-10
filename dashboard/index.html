@@ -46,6 +46,18 @@ background:#1f2a3a;color:#a9c4ec;border:1px solid #2f3d52}
 .chip.warn{background:#3a1d1d;color:#ff9a9a;border-color:#5c2b2b}
 .mut{color:var(--mut)}a{color:var(--blue);text-decoration:none;letter-spacing:.08em;font-size:11px}
 a:hover{text-decoration:underline}
+.ed{background:none;border:1px solid var(--bd);color:#a9c4ec;border-radius:4px;padding:3px 8px;font-size:11px;margin-left:8px;cursor:pointer}
+.ed:hover{border-color:var(--blue)}
+.need{color:#ffa94d}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:22px;width:min(560px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+dialog h3{margin:0 0 4px;font-size:14px}dialog .sub{color:var(--mut);font-size:11px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .full{grid-column:1/-1}
+.grid label{display:block;font-size:10px;letter-spacing:.12em;color:var(--mut);margin-bottom:4px}
+.grid input{width:100%;min-width:0}
+.sec{grid-column:1/-1;font-size:10px;letter-spacing:.16em;color:var(--blue);margin-top:6px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.links{font-size:11px;margin-top:12px;color:var(--mut)}.links a{margin-right:12px}
 .empty{padding:30px;text-align:center;color:var(--mut)}
 </style>
 </head>
@@ -78,6 +90,7 @@ a:hover{text-decoration:underline}
       <option value="no">No address</option>
     </select>
     <button id="ghl">↓ GHL CSV</button>
+    <button id="enr" title="Download your typed-in addresses to save in GitHub">↓ ENRICHMENT CSV</button>
     <button id="clear">✕ CLEAR</button>
     <span id="count"></span>
   </div>
@@ -89,6 +102,29 @@ a:hover{text-decoration:underline}
     </table>
   </div>
 </main>
+<dialog id="dlg">
+  <h3 id="dtitle">Edit lead</h3>
+  <div class="sub" id="dsub"></div>
+  <div class="grid">
+    <div class="sec">PROPERTY</div>
+    <div class="full"><label>PROPERTY ADDRESS</label><input id="e_prop_address"></div>
+    <div><label>CITY</label><input id="e_prop_city"></div>
+    <div><label>STATE</label><input id="e_prop_state" placeholder="MO"></div>
+    <div><label>ZIP</label><input id="e_prop_zip"></div>
+    <div><label>AMOUNT / DEBT OWED ($)</label><input id="e_amount" inputmode="decimal"></div>
+    <div class="sec">MAILING</div>
+    <div class="full"><label>MAILING ADDRESS</label><input id="e_mail_address"></div>
+    <div><label>CITY</label><input id="e_mail_city"></div>
+    <div><label>STATE</label><input id="e_mail_state"></div>
+    <div><label>ZIP</label><input id="e_mail_zip"></div>
+  </div>
+  <div class="links">Look up the owner:
+    <a href="https://payments.jacksongov.org" target="_blank" rel="noopener">Collector tax search</a>
+    <a href="https://www.jacksongov.org/Services/Parcel-Viewer" target="_blank" rel="noopener">Parcel viewer</a>
+  </div>
+  <div class="acts"><button id="dcancel" type="button">CANCEL</button><button id="dsave" type="button">SAVE</button></div>
+</dialog>
+
 
 <script>
 let DATA = {records: []};
@@ -172,12 +208,12 @@ function render() {
     return `<tr>
       <td><span class="sc ${sc}">${esc(r.score)}</span></td>
       <td><span class="tp">${esc(r.cat_label)}</span></td>
-      <td class="own"><b>${esc(r.owner)}</b><span>${esc(prop)}</span></td>
+      <td class="own"><b>${esc(r.owner)}</b><span>${esc(prop)}</span>${hasAddr(r) ? "" : '<span class="need"> · needs address</span>'}</td>
       <td class="mut">${esc(r.filed)}</td>
       <td class="mut">${amt}</td>
       <td>${flags}</td>
       <td class="mut">${esc(r.doc_num)}</td>
-      <td>${link}</td></tr>`;
+      <td>${link}<button type="button" class="ed" data-doc="${esc(r.doc_num)}">✎ EDIT</button></td></tr>`;
   }).join("");
 }
 
@@ -214,13 +250,61 @@ function downloadGHL() {
   a.click();
 }
 
+
+/* ---------- manual address entry (saved in this browser; export to keep) ---------- */
+const EK = "jc_edits_v1";
+let EDITS = {};
+try { EDITS = JSON.parse(localStorage.getItem(EK) || "{}"); } catch (e) { EDITS = {}; }
+const saveEdits = () => { try { localStorage.setItem(EK, JSON.stringify(EDITS)); } catch (e) {} };
+const EF = ["prop_address","prop_city","prop_state","prop_zip","mail_address","mail_city","mail_state","mail_zip","amount"];
+let editing = null;
+
+$("rows").addEventListener("click", ev => {
+  const b = ev.target.closest(".ed");
+  if (!b) return;
+  editing = DATA.records.find(r => r.doc_num === b.dataset.doc);
+  if (!editing) return;
+  $("dtitle").textContent = editing.owner || "Lead";
+  $("dsub").textContent = editing.cat_label + " · " + editing.doc_num + " · " + (editing.legal || "");
+  EF.forEach(f => $("e_" + f).value = editing[f] == null ? "" : editing[f]);
+  $("dlg").showModal();
+});
+$("dcancel").onclick = () => $("dlg").close();
+$("dsave").onclick = () => {
+  if (!editing) return;
+  const e = {};
+  EF.forEach(f => { const v = $("e_" + f).value.trim(); e[f] = f === "amount" ? (parseFloat(v.replace(/[$,]/g, "")) || null) : v; });
+  if (e.prop_address && !e.prop_state) e.prop_state = "MO";
+  EDITS[editing.doc_num] = e;
+  Object.assign(editing, e);
+  saveEdits();
+  $("dlg").close();
+  cards(DATA.records); render();
+};
+
+$("enr").onclick = () => {
+  const cols = ["Document Number","Owner","Property Address","Property City","Property State","Property Zip",
+    "Mailing Address","Mailing City","Mailing State","Mailing Zip","Amount"];
+  const rows = Object.keys(EDITS).map(doc => {
+    const r = DATA.records.find(x => x.doc_num === doc) || {}, e = EDITS[doc];
+    return [doc, r.owner || "", e.prop_address, e.prop_city, e.prop_state, e.prop_zip,
+      e.mail_address, e.mail_city, e.mail_state, e.mail_zip, e.amount || ""];
+  });
+  if (!rows.length) { alert("Nothing saved yet. Use ✎ EDIT on a lead first."); return; }
+  const csv = [cols, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = "enrichment.csv";
+  a.click();
+};
+
 ["q","type","score","addr"].forEach(id => $(id).addEventListener("input", render));
 $("clear").onclick = () => { $("q").value = ""; $("type").value = ""; $("score").value = "0"; $("addr").value = ""; render(); };
 $("ghl").onclick = downloadGHL;
 
 fetch("records.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   DATA = d;
-  DATA.records = (d.records || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+  DATA.records = (d.records || []).map(r => Object.assign(r, EDITS[r.doc_num] || {})).sort((a, b) => (b.score || 0) - (a.score || 0));
   const dr = d.date_range || {};
   $("range").textContent = (dr.start || "") + " → " + (dr.end || "");
   cards(DATA.records);
