@@ -164,8 +164,12 @@ function splitName(o) {
   if (!o) return ["", ""];
   if (CORP.test(o)) return ["", o];
   if (o.includes(",")) { const [l, f] = o.split(",", 2); return [f.trim(), l.trim()]; }
-  const t = o.split(/\s+/);
-  return t.length === 1 ? ["", t[0]] : [t.slice(0, -1).join(" "), t[t.length - 1]];
+  const drop = new Set(["ESTATE","DECEASED","DESC","DECD","DEC'D","JR","SR","II","III","IV","I"]);
+  const t = o.toUpperCase().replace(/\./g, "").split(/\s+/).filter(x => !drop.has(x));
+  const cap = s => s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+  if (!t.length) return ["", cap(o)];
+  if (t.length === 1) return ["", cap(t[0])];
+  return [cap(t.slice(1).join(" ")), cap(t[0])];   // LAST FIRST [MIDDLE]
 }
 const csvCell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
 function downloadGHL() {
