@@ -1,34 +1,11 @@
 {
-  "fetched_at": "2026-11-13T08:16:11+00:00",
+  "fetched_at": "2026-11-14T07:55:49+00:00",
   "source": "Jackson County Recorder of Deeds - Jackson County, MO",
   "date_range": {
-    "start": "2026-11-06",
-    "end": "2026-11-13"
+    "start": "2026-11-07",
+    "end": "2026-11-14"
   },
-  "total": 1,
+  "total": 0,
   "with_address": 0,
-  "records": [
-    {
-      "doc_num": "2026E0083150",
-      "doc_type": "LIEN",
-      "filed": "2026-11-06",
-      "cat": "LNHOA",
-      "cat_label": "HOA Lien",
-      "owner": "PERRY CASSIE JO",
-      "grantee": "SUMMERFIELD EAST HOMEOWNERS ASSOCIATION",
-      "amount": null,
-      "legal": "BLUE SPRINGS SUMMERFIELD EAST 1ST PLAT LTS 1-60 & TR A-D I80/66 BS LT 18 - 18 PLAT 080 066",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "",
-      "mail_zip": "",
-      "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
-      "flags": [],
-      "score": 30
-    }
-  ]
+  "records": []
 }
