@@ -4,6 +4,13 @@ on:
   schedule:
     - cron: "0 7 * * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "dashboard/index.html"
+      - "data/clerk_import.csv"
+      - "data/enrichment.csv"
+      - "scraper/fetch.py"
 
 permissions:
   contents: write
