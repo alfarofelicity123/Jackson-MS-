@@ -51,6 +51,11 @@ try:  # optional at import time so the module can be unit-tested without them
 except Exception:  # pragma: no cover
     DBF = None
 
+try:  # fuzzy name matching (falls back to difflib if rapidfuzz is missing)
+    from rapidfuzz import fuzz as _rf_fuzz, process as _rf_process
+except Exception:  # pragma: no cover
+    _rf_fuzz = _rf_process = None
+
 try:
     from playwright.async_api import async_playwright
 except Exception:  # pragma: no cover
@@ -64,6 +69,7 @@ DASHBOARD_JSON = ROOT / "dashboard" / "records.json"
 DATA_JSON = ROOT / "data" / "records.json"
 GHL_CSV = ROOT / "data" / "ghl_export.csv"
 ENRICH_CSV = ROOT / "data" / "enrichment.csv"
+HISTORY_JSON = ROOT / "data" / "history.json"
 DEBUG_DIR = ROOT / "data" / "debug"
 
 COUNTY = "Jackson County"
@@ -83,6 +89,9 @@ NAME_ORDER = (os.getenv("NAME_ORDER") or "LAST_FIRST").upper()
 HEADLESS = os.getenv("HEADLESS", "1") != "0"
 MAX_PAGES = int(os.getenv("CLERK_MAX_PAGES") or "30")
 RETRIES = 3
+FUZZY_STRONG = int(os.getenv("FUZZY_STRONG") or "80")   # >= this: same person
+FUZZY_REVIEW = int(os.getenv("FUZZY_REVIEW") or "60")   # below this: no match
+USE_HISTORY = (os.getenv("USE_HISTORY") or "1") != "0"
 UA = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/124.0 Safari/537.36"
@@ -738,18 +747,71 @@ def load_parcels() -> Optional[Path]:
         return None
 
 
-def build_owner_lookup(dbf_path: Path) -> Dict[str, Dict[str, str]]:
+_FUZZ_DROP = {"ESTATE", "DECEASED", "DESC", "DECD", "JR", "SR", "II", "III", "IV", "THE", "AND"}
+
+
+def _fz_key(s: str) -> str:
+    """Name -> comparison key: upper, no punctuation, no suffix words."""
+    toks = [t for t in norm_name(s).replace(",", " ").split() if t not in _FUZZ_DROP]
+    return " ".join(toks)
+
+
+class OwnerIndex(dict):
+    """Exact name-variant lookup (the dict itself) + comparison keys for fuzzy matching."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.names: Dict[str, Dict[str, str]] = {}
+        self._fz_list: List[str] = []
+        self._fz_n = -1
+
+    def fz_list(self) -> List[str]:
+        if self._fz_n != len(self.names):
+            self._fz_list = list(self.names)
+            self._fz_n = len(self.names)
+        return self._fz_list
+
+
+def fuzzy_score(a: str, b: str) -> int:
+    """0-100 similarity, word-order independent."""
+    a, b = _fz_key(a), _fz_key(b)
+    if not a or not b:
+        return 0
+    if _rf_fuzz is not None:
+        return int(round(_rf_fuzz.token_sort_ratio(a, b)))
+    import difflib
+    sa, sb = " ".join(sorted(a.split())), " ".join(sorted(b.split()))
+    return int(round(difflib.SequenceMatcher(None, sa, sb).ratio() * 100))
+
+
+def best_fuzzy(name: str, index: "OwnerIndex") -> Tuple[Optional[str], int]:
+    q = _fz_key(name)
+    choices = index.fz_list()
+    if not q or not choices:
+        return None, 0
+    if _rf_process is not None:
+        res = _rf_process.extractOne(q, choices, scorer=_rf_fuzz.token_sort_ratio, score_cutoff=FUZZY_REVIEW)
+        return (res[0], int(round(res[1]))) if res else (None, 0)
+    best, bs = None, 0
+    for k in choices:
+        sc = fuzzy_score(q, k)
+        if sc > bs:
+            best, bs = k, sc
+    return (best, bs) if bs >= FUZZY_REVIEW else (None, 0)
+
+
+def build_owner_lookup(dbf_path: Path) -> "OwnerIndex":
+    lookup = OwnerIndex()
     if DBF is None:
         log.error("dbfread not installed")
-        return {}
-    lookup: Dict[str, Dict[str, str]] = {}
+        return lookup
     table = DBF(str(dbf_path), encoding="latin-1", ignore_missing_memofile=True,
                 char_decode_errors="ignore", load=False)
     cols = _resolve_cols(list(table.field_names))
     log.info("Parcel columns resolved: %s", cols)
     if not cols["owner"]:
         log.error("No owner column in parcel file; fields=%s", table.field_names)
-        return {}
+        return lookup
     n = 0
     for row in table:
         try:
@@ -759,6 +821,9 @@ def build_owner_lookup(dbf_path: Path) -> Dict[str, Dict[str, str]]:
             info = {k: clean(row.get(c)) if c else "" for k, c in cols.items()}
             for v in name_variants(owner):
                 lookup.setdefault(v, info)
+            key = _fz_key(owner)
+            if key:
+                lookup.names.setdefault(key, info)
             n += 1
         except Exception:  # noqa: BLE001
             continue
@@ -767,6 +832,7 @@ def build_owner_lookup(dbf_path: Path) -> Dict[str, Dict[str, str]]:
 
 
 def lookup_owner(lookup: Dict[str, Dict[str, str]], *names: str) -> Optional[Dict[str, str]]:
+    """Exact match on any name variant."""
     for nm in names:
         for v in name_variants(nm):
             hit = lookup.get(v)
@@ -775,10 +841,42 @@ def lookup_owner(lookup: Dict[str, Dict[str, str]], *names: str) -> Optional[Dic
     return None
 
 
+def match_owner(lookup: Dict[str, Dict[str, str]], *names: str) -> Tuple[Optional[Dict[str, str]], Optional[int], bool]:
+    """
+    Returns (parcel_info, match_score, needs_review).
+      exact name variant      -> score 100
+      fuzzy >= FUZZY_STRONG   -> accepted (strong match)
+      FUZZY_REVIEW..STRONG-1  -> NOT applied, flagged for manual review
+      below FUZZY_REVIEW      -> no match (score None)
+    """
+    if not lookup:
+        return None, None, False
+    hit = lookup_owner(lookup, *names)
+    if hit:
+        return hit, 100, False
+    idx = getattr(lookup, "names", None)
+    if not idx:
+        return None, None, False
+    best_info, best_score = None, 0
+    for nm in names:
+        if not clean(nm) or is_corp(nm):
+            continue
+        key, sc = best_fuzzy(nm, lookup)  # type: ignore[arg-type]
+        if key and sc > best_score:
+            best_info, best_score = idx[key], sc
+    if best_score >= FUZZY_STRONG:
+        return best_info, best_score, False
+    if best_score >= FUZZY_REVIEW:
+        return None, best_score, True
+    return None, None, False
+
+
 def enrich(records: List[Dict[str, Any]], lookup: Dict[str, Dict[str, str]]) -> None:
     for r in records:
         try:
-            hit = lookup_owner(lookup, r["owner"], r["grantee"]) if lookup else None
+            hit, score, review = match_owner(lookup, r["owner"], r["grantee"])
+            r["match_score"] = score
+            r["match_review"] = review
             r.update({
                 "prop_address": hit["site_addr"] if hit else "",
                 "prop_city": (hit["site_city"] if hit else "") or "",
@@ -792,6 +890,71 @@ def enrich(records: List[Dict[str, Any]], lookup: Dict[str, Dict[str, str]]) -> 
         except Exception as e:  # noqa: BLE001
             log.debug("enrich failed for %s: %s", r.get("doc_num"), e)
 
+
+def mark_gaps(records: List[Dict[str, Any]]) -> None:
+    """needs_enrichment = no address yet or key fields blank; redacted = owner/legal blank."""
+    for r in records:
+        try:
+            redacted = not clean(r.get("owner")) or not clean(r.get("legal"))
+            no_addr = not (r.get("prop_address") or r.get("mail_address"))
+            r["redacted"] = bool(redacted)
+            r["needs_enrichment"] = bool(redacted or no_addr)
+        except Exception:  # noqa: BLE001
+            r["redacted"], r["needs_enrichment"] = False, True
+
+
+# --------------------------------------------------------------------------- #
+# History: append, never overwrite
+# --------------------------------------------------------------------------- #
+HISTORY_BASE_KEYS = ["doc_num", "doc_type", "filed", "cat", "cat_label", "owner", "grantee",
+                     "amount", "legal", "clerk_url"]
+
+
+def load_history(path: Path = HISTORY_JSON) -> Dict[str, Dict[str, Any]]:
+    try:
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+    except Exception as e:  # noqa: BLE001
+        log.error("Could not read %s (starting fresh): %s", path, e)
+    return {}
+
+
+def merge_history(records: List[Dict[str, Any]], history: Dict[str, Dict[str, Any]],
+                  now_iso: str) -> List[Dict[str, Any]]:
+    """
+    Stamp every record with scraped_at/first_seen, add new ones to history, and
+    return this run's records plus older ones that are only in history.
+    """
+    current = set()
+    for r in records:
+        key = f"{r['doc_num']}|{r['cat']}"
+        current.add(key)
+        old = history.get(key, {})
+        r["scraped_at"] = now_iso
+        r["first_seen"] = old.get("first_seen", now_iso)
+        entry = {k: r.get(k) for k in HISTORY_BASE_KEYS}
+        entry.update({"first_seen": r["first_seen"], "last_seen": now_iso})
+        history[key] = entry
+    extra = []
+    for key, h in history.items():
+        if key in current:
+            continue
+        rec = {k: h.get(k) for k in HISTORY_BASE_KEYS}
+        rec["first_seen"] = h.get("first_seen", now_iso)
+        rec["scraped_at"] = h.get("last_seen", rec["first_seen"])
+        extra.append(rec)
+    return records + extra
+
+
+def save_history(history: Dict[str, Dict[str, Any]], path: Path = HISTORY_JSON) -> None:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(history, indent=1, ensure_ascii=False, sort_keys=True), encoding="utf-8")
+        log.info("History: %d leads saved to %s", len(history), path)
+    except Exception as e:  # noqa: BLE001
+        log.error("Could not save history: %s", e)
 
 
 _ENRICH_KEYS = {
@@ -916,14 +1079,22 @@ RECORD_KEYS = [
     "prop_address", "prop_city", "prop_state", "prop_zip",
     "mail_address", "mail_city", "mail_state", "mail_zip",
     "clerk_url", "flags", "score",
+    "match_score", "match_review", "needs_enrichment", "redacted", "first_seen", "scraped_at",
 ]
+_BOOL_KEYS = {"match_review", "needs_enrichment", "redacted"}
+_NONE_KEYS = {"amount", "match_score"}
 
 
 def finalise(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
     for r in records:
-        out.append({k: r.get(k, [] if k == "flags" else ("" if k != "amount" else None))
-                    for k in RECORD_KEYS})
+        def dflt(k: str) -> Any:
+            if k == "flags":
+                return []
+            if k in _BOOL_KEYS:
+                return False
+            return None if k in _NONE_KEYS else ""
+        out.append({k: r.get(k, dflt(k)) for k in RECORD_KEYS})
     return out
 
 
@@ -1022,6 +1193,18 @@ async def run(days: int) -> Dict[str, Any]:
     except Exception as e:  # noqa: BLE001
         log.error("Clerk step crashed: %s", e)
 
+    now_iso = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    if USE_HISTORY:
+        try:
+            history = load_history()
+            records = merge_history(records, history, now_iso)
+            save_history(history)
+        except Exception as e:  # noqa: BLE001
+            log.error("History step failed: %s", e)
+    else:
+        for r in records:
+            r["scraped_at"] = r["first_seen"] = now_iso
+
     # drop anything outside the lookback window (portal filters are sometimes loose)
     keep = []
     for r in records:
@@ -1031,7 +1214,7 @@ async def run(days: int) -> Dict[str, Any]:
     records = keep
     log.info("Clerk records: %d", len(records))
 
-    lookup: Dict[str, Dict[str, str]] = {}
+    lookup: Dict[str, Dict[str, str]] = OwnerIndex()
     try:
         dbf = load_parcels()
         if dbf:
@@ -1041,6 +1224,7 @@ async def run(days: int) -> Dict[str, Any]:
 
     enrich(records, lookup)
     apply_enrichment(records)
+    mark_gaps(records)
     score_all(records, new_cutoff)
     records = finalise(records)
     records.sort(key=lambda r: r["score"], reverse=True)
