@@ -44,7 +44,9 @@ table{width:100%;border-collapse:collapse;min-width:1250px}
 th{position:sticky;top:0;background:#0d1219;z-index:2;font-size:9px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:13px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
 td{padding:11px 12px;border-bottom:1px solid #161d27;vertical-align:middle}
 tr:hover td{background:var(--panel2)}
-.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #1f4a7a;background:#0b2036;color:var(--acc);font:700 14px var(--cond);border-radius:3px}
+.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #3a4453;background:#131920;color:#f1f5f9;font:700 14px var(--cond);border-radius:3px}
+.sc.warm{border-color:#6b4a1c;background:#241a0c;color:#ffa94d}
+.sc.hot{border-color:#6b2424;background:#2a1212;color:#ff5c5c}
 .tp{display:inline-block;padding:4px 9px;border-radius:3px;font-size:9px;letter-spacing:.12em;border:1px solid;white-space:nowrap}
 .t-lp{color:#ff6b6b;border-color:#5c2b2b;background:#241315}
 .t-fc{color:#ff9a4d;border-color:#5c3b1f;background:#241810}
@@ -247,7 +249,7 @@ function render() {
     const link = /^https?:\/\//.test(r.clerk_url || "")
       ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">#${esc(r.doc_num)}</a>` : "#" + esc(r.doc_num);
     return `<tr>
-      <td><span class="sc">${esc(r.score)}</span></td>
+      <td><span class="sc ${r.score >= 70 ? "hot" : r.score >= 40 ? "warm" : ""}">${esc(r.score)}</span></td>
       <td><span class="tp t-${g}">${esc(tl)}</span></td>
       <td>${esc(r.cat)}</td>
       <td>${esc(r.filed)}</td>
