@@ -3,105 +3,130 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Jackson County · Motivated Seller Intelligence</title>
+<title>Jackson Intel · Motivated Seller Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f1318;--panel:#171c23;--panel2:#1c222b;--bd:#262d38;--fg:#e8ecf1;--mut:#7f8a99;
---blue:#4da3ff;--red:#ff6b6b;--purple:#9b8cff;--orange:#ffa94d;--green:#4ade80;--cyan:#38bdf8}
+:root{--bg:#0a0d12;--panel:#10151c;--panel2:#141b24;--bd:#1c2430;--fg:#dfe6ee;--mut:#6b7787;--acc:#3b9eff;--accd:#06101c;
+--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-padding:18px 28px;border-bottom:1px solid var(--bd);background:#0c1015}
-header h1{margin:0;font-size:13px;letter-spacing:.14em;font-weight:600;color:#b8c2d0}
-#range{color:var(--mut);font-size:11px;border:1px solid var(--bd);padding:5px 10px;border-radius:4px}
-main{max-width:1300px;margin:0 auto;padding:24px 28px}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
-.card{background:var(--panel);border:1px solid var(--bd);border-left:3px solid var(--c,var(--blue));border-radius:6px;padding:16px}
-button.card{font:inherit;color:inherit;text-align:left;cursor:pointer;width:100%}
-button.card:hover{background:var(--panel2);border-color:#35404f;border-left-color:var(--c)}
-button.card.active{background:#1d2633;box-shadow:0 0 0 1px var(--c) inset}
-.card .l{font-size:10px;letter-spacing:.16em;color:var(--mut)}
-.card .n{font-size:30px;font-weight:700;margin-top:6px}
-.card .s{font-size:10px;color:#556070;margin-top:4px}
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:22px 0 14px}
-input,select,button{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:5px;
-padding:9px 12px;font:inherit}
-input{min-width:230px}
-button{cursor:pointer;letter-spacing:.08em}
-button:hover{border-color:var(--blue)}
-#count{margin-left:auto;color:var(--mut)}
-.wrap{background:var(--panel);border:1px solid var(--bd);border-radius:6px;overflow-x:auto}
-table{width:100%;border-collapse:collapse}
-th{font-size:10px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:14px 14px;border-bottom:1px solid var(--bd);white-space:nowrap}
-td{padding:12px 14px;border-bottom:1px solid #1f2630;vertical-align:middle}
-tr:last-child td{border-bottom:0}
+body{margin:0;background:var(--bg);color:var(--fg);font:12px/1.4 var(--mono)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;border-bottom:1px solid var(--bd);background:#080b0f}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:34px;height:34px}
+.brand h1{margin:0;font:700 20px var(--cond);letter-spacing:.06em;color:#fff}
+.brand small{display:block;font-size:9px;letter-spacing:.2em;color:var(--mut)}
+.upd{font-size:11px;color:var(--mut)}
+.upd i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:8px}
+main{padding:0 28px 40px;max-width:1700px;margin:0 auto}
+.stats{display:flex;gap:56px;flex-wrap:wrap;padding:26px 4px;border-bottom:1px solid var(--bd)}
+.st .n{font:700 38px/1 var(--cond);color:var(--acc);letter-spacing:.02em}
+.st .n.sm{font-size:30px;line-height:1.05}
+.st .l{font-size:10px;letter-spacing:.16em;color:var(--mut);margin-top:6px}
+.legend{display:flex;gap:26px;flex-wrap:wrap;padding:18px 4px;font-size:11px;color:#aab4c2}
+.legend b{font:700 14px var(--cond);color:#fff;margin-left:5px}
+.dot{display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:1px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.search{flex:1 1 320px;position:relative}
+.search input{width:100%;padding:11px 14px 11px 34px}
+.search:before{content:"⌕";position:absolute;left:12px;top:8px;color:var(--mut);font-size:15px}
+input,select,button{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:4px;font:inherit;padding:10px 14px}
+select{padding-right:8px}
+button{cursor:pointer;letter-spacing:.08em;font-size:11px}
+button:hover{border-color:var(--acc)}
+button.on{background:var(--acc);color:var(--accd);border-color:var(--acc);font-weight:700}
+.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sp{margin-left:auto;display:flex;gap:10px}
+.showing{margin:16px 2px 10px;font-size:11px;color:var(--mut)}.showing b{color:#fff}
+.wrap{border:1px solid var(--bd);border-radius:6px;background:var(--panel);max-height:72vh;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1250px}
+th{position:sticky;top:0;background:#0d1219;z-index:2;font-size:9px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:13px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #161d27;vertical-align:middle}
 tr:hover td{background:var(--panel2)}
-.sc{display:inline-block;min-width:34px;text-align:center;padding:5px 7px;border-radius:4px;font-weight:700;
-background:#232b37;color:#cfd8e3}
-.sc.hot{background:#3a1d1d;color:var(--red)}.sc.warm{background:#3a2e17;color:var(--orange)}
-.tp{display:inline-block;padding:4px 9px;border-radius:4px;font-size:11px;background:#222c3b;color:#a9c4ec;border:1px solid #2f3d52}
-.own b{display:block;font-size:13px}.own span{color:var(--mut);font-size:11px}
-.chip{display:inline-block;margin:2px 4px 2px 0;padding:3px 8px;border-radius:4px;font-size:11px;
-background:#1f2a3a;color:#a9c4ec;border:1px solid #2f3d52}
-.chip.new{background:#17301f;color:#7be59c;border-color:#245c37}
-.chip.warn{background:#3a1d1d;color:#ff9a9a;border-color:#5c2b2b}
-.mut{color:var(--mut)}a{color:var(--blue);text-decoration:none;letter-spacing:.08em;font-size:11px}
-a:hover{text-decoration:underline}
-.ed{background:none;border:1px solid var(--bd);color:#a9c4ec;border-radius:4px;padding:3px 8px;font-size:11px;margin-left:8px;cursor:pointer}
-.ed:hover{border-color:var(--blue)}
-.need{color:#ffa94d}
-dialog{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:22px;width:min(560px,94vw)}
-dialog::backdrop{background:rgba(0,0,0,.6)}
+.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #1f4a7a;background:#0b2036;color:var(--acc);font:700 14px var(--cond);border-radius:3px}
+.tp{display:inline-block;padding:4px 9px;border-radius:3px;font-size:9px;letter-spacing:.12em;border:1px solid;white-space:nowrap}
+.t-lp{color:#ff6b6b;border-color:#5c2b2b;background:#241315}
+.t-fc{color:#ff9a4d;border-color:#5c3b1f;background:#241810}
+.t-tax{color:#f5c542;border-color:#5a4a16;background:#221c0c}
+.t-jud{color:#a78bfa;border-color:#40336b;background:#171329}
+.t-lien{color:#4da3ff;border-color:#1f4a7a;background:#0d1b2b}
+.t-pro{color:#4ade80;border-color:#1f5a38;background:#0e2217}
+.t-other{color:#aab4c2;border-color:#333c49;background:#161b22}
+.own{font-weight:700;color:#fff;max-width:240px}
+.dash{color:#3a4453}
+.chip{display:inline-block;margin:1px 5px 1px 0;font-size:10px;color:#8794a6;white-space:nowrap}
+.chip.new{color:#7ea9d8}
+.legal{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9aa6b6}
+a{color:#4da3ff;text-decoration:none}a:hover{text-decoration:underline}
+.ed{padding:3px 8px;font-size:10px;color:#9fc4ee}
+.more{display:block;margin:16px auto}
+.empty{padding:34px;text-align:center;color:var(--mut)}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:22px;width:min(560px,94vw);font:12px var(--mono)}
+dialog::backdrop{background:rgba(0,0,0,.65)}
 dialog h3{margin:0 0 4px;font-size:14px}dialog .sub{color:var(--mut);font-size:11px;margin-bottom:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .full{grid-column:1/-1}
-.grid label{display:block;font-size:10px;letter-spacing:.12em;color:var(--mut);margin-bottom:4px}
+.grid label{display:block;font-size:9px;letter-spacing:.14em;color:var(--mut);margin-bottom:4px}
 .grid input{width:100%;min-width:0}
-.sec{grid-column:1/-1;font-size:10px;letter-spacing:.16em;color:var(--blue);margin-top:6px}
-.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap}
+.sec{grid-column:1/-1;font-size:10px;letter-spacing:.16em;color:var(--acc);margin-top:6px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
 .links{font-size:11px;margin-top:12px;color:var(--mut)}.links a{margin-right:12px}
-.empty{padding:30px;text-align:center;color:var(--mut)}
 </style>
 </head>
 <body>
 <header>
-  <h1>JACKSON COUNTY · MOTIVATED SELLER INTELLIGENCE</h1>
-  <div id="range">loading…</div>
+  <div class="brand">
+    <svg viewBox="0 0 40 40"><polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="#0b2036" stroke="#3b9eff" stroke-width="2"/><text x="20" y="26" text-anchor="middle" font-family="Arial" font-weight="700" font-size="16" fill="#3b9eff">J</text></svg>
+    <div><h1>JACKSON INTEL</h1><small>MOTIVATED SELLER INTELLIGENCE</small></div>
+  </div>
+  <div class="upd"><i></i><span id="upd">loading…</span></div>
 </header>
+
 <main>
-  <section class="cards" id="cards"></section>
+  <section class="stats">
+    <div class="st"><div class="n" id="s_total">0</div><div class="l">TOTAL RECORDS</div></div>
+    <div class="st"><div class="n" id="s_hot">0</div><div class="l">HOT LEADS ≥70</div></div>
+    <div class="st"><div class="n" id="s_warm">0</div><div class="l">WARM LEADS 50-69</div></div>
+    <div class="st"><div class="n" id="s_addr">0</div><div class="l">WITH ADDRESS</div></div>
+    <div class="st"><div class="n sm" id="s_range">–</div><div class="l">DATE RANGE</div></div>
+  </section>
+
+  <section class="legend" id="legend"></section>
 
   <div class="bar">
-    <input id="q" placeholder="Search owner, address, doc #…">
-    <select id="type">
-      <option value="">All Types</option>
-      <option value="pre">Pre-foreclosure</option>
-      <option value="jud">Judgments</option>
-      <option value="lien">Liens</option>
-      <option value="pro">Probate</option>
-      <option value="other">Other</option>
+    <div class="search"><input id="q" placeholder="Search owner, address, doc number, legal..."></div>
+    <select id="sort">
+      <option value="score_desc">Score: High → Low</option>
+      <option value="score_asc">Score: Low → High</option>
+      <option value="filed_desc">Filed: Newest</option>
+      <option value="filed_asc">Filed: Oldest</option>
+      <option value="amount_desc">Amount: High → Low</option>
     </select>
-    <select id="score">
-      <option value="0">All Scores</option>
-      <option value="70">Hot (70+)</option>
-      <option value="50">Warm (50+)</option>
-    </select>
-    <select id="addr">
-      <option value="">Address: All</option>
-      <option value="yes">Has address</option>
-      <option value="no">No address</option>
-    </select>
-    <button id="ghl">↓ GHL CSV</button>
-    <button id="enr" title="Download your typed-in addresses to save in GitHub">↓ ENRICHMENT CSV</button>
-    <button id="clear">✕ CLEAR</button>
-    <span id="count"></span>
+    <span id="types" style="display:flex;gap:10px;flex-wrap:wrap"></span>
   </div>
+  <div class="row2">
+    <span id="scores" style="display:flex;gap:10px;flex-wrap:wrap"></span>
+    <span class="sp">
+      <button id="ghl">↓ GHL CSV</button>
+      <button id="enr" title="Download your typed-in addresses to save in GitHub">↓ ENRICHMENT CSV</button>
+    </span>
+  </div>
+
+  <div class="showing" id="showing">Showing <b>0</b> of 0 records</div>
 
   <div class="wrap">
     <table>
-      <thead><tr><th>SCORE</th><th>TYPE</th><th>OWNER / PROPERTY</th><th>FILED</th><th>AMOUNT</th><th>FLAGS</th><th>DOC</th><th>LINK</th></tr></thead>
+      <thead><tr>
+        <th>SCORE</th><th>TYPE</th><th>DOC</th><th>FILED</th><th>OWNER / GRANTOR</th>
+        <th>PROPERTY ADDRESS</th><th>MAILING ADDRESS</th><th>AMOUNT</th><th>FLAGS</th>
+        <th>LEGAL DESC</th><th>DOC LINK</th><th></th>
+      </tr></thead>
       <tbody id="rows"></tbody>
     </table>
   </div>
+  <button id="more" class="more" style="display:none">SHOW MORE</button>
 </main>
+
 <dialog id="dlg">
   <h3 id="dtitle">Edit lead</h3>
   <div class="sub" id="dsub"></div>
@@ -122,103 +147,127 @@ dialog h3{margin:0 0 4px;font-size:14px}dialog .sub{color:var(--mut);font-size:1
     <a href="https://payments.jacksongov.org" target="_blank" rel="noopener">Collector tax search</a>
     <a href="https://www.jacksongov.org/Services/Parcel-Viewer" target="_blank" rel="noopener">Parcel viewer</a>
   </div>
-  <div class="acts"><button id="dcancel" type="button">CANCEL</button><button id="dsave" type="button">SAVE</button></div>
+  <div class="acts"><button id="dcancel" type="button">CANCEL</button><button id="dsave" type="button" class="on">SAVE</button></div>
 </dialog>
 
-
 <script>
-let DATA = {records: []};
-
+const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
   c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dash = v => v ? esc(v) : '<span class="dash">–</span>';
 
+let DATA = {records: []};
+const S = {type: "", min: 0, sort: "score_desc", limit: 200};
+
+/* ---------- categories ---------- */
+const TYPES = [
+  ["lp",   "LIS PENDENS",  "#ff6b6b"],
+  ["fc",   "FORECLOSURE",  "#ff9a4d"],
+  ["tax",  "TAX",          "#f5c542"],
+  ["jud",  "JUDGMENT",     "#a78bfa"],
+  ["lien", "LIEN",         "#4da3ff"],
+  ["pro",  "PROBATE",      "#4ade80"],
+];
 const group = r => {
   const c = r.cat || "";
-  if (c === "LP" || c === "NOFC") return "pre";
+  if (c === "LP") return "lp";
+  if (c === "NOFC") return "fc";
+  if (["TAXDEED","LNCORPTX","LNIRS","LNFED"].includes(c)) return "tax";
   if (["JUD","CCJ","DRJUD"].includes(c)) return "jud";
-  if (c.startsWith("LN") || c === "MEDLN") return "lien";
+  if (c === "LN" || c === "LNMECH" || c === "LNHOA" || c === "MEDLN") return "lien";
   if (c === "PRO") return "pro";
   return "other";
 };
 const hasAddr = r => !!(r.prop_address || r.mail_address);
-const $ = id => document.getElementById(id);
+const propText = r => [r.prop_address, r.prop_city].filter(Boolean).join(", ") + (r.prop_address && r.prop_zip ? " " + r.prop_zip : "");
+const mailText = r => r.mail_address
+  ? [r.mail_address, r.mail_city, [r.mail_state, r.mail_zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : "";
 
-function cards(rs) {
-  const n = g => rs.filter(r => group(r) === g).length;
-  const items = [
-    ["total", "TOTAL LEADS", rs.length, "click to show all", "#4da3ff"],
-    ["pre", "PRE-FORECLOSURE", n("pre"), "LP / NOFC", "#ff6b6b"],
-    ["jud", "JUDGMENTS", n("jud"), "JUD / CCJ / DRJUD", "#9b8cff"],
-    ["lien", "LIENS", n("lien"), "LN / IRS / MECH / HOA", "#ffa94d"],
-    ["pro", "PROBATE", n("pro"), "PRO docs", "#4da3ff"],
-    ["addr", "WITH ADDRESS", rs.filter(hasAddr).length, "parcel matched", "#4ade80"],
-    ["hot", "HOT LEADS ≥70", rs.filter(r => r.score >= 70).length, "score 70+", "#38bdf8"],
-  ];
-  $("cards").innerHTML = items.map(([k, l, v, s, c]) =>
-    `<button type="button" class="card" data-k="${k}" style="--c:${c}"><div class="l">${l}</div><div class="n">${v}</div><div class="s">${s}</div></button>`).join("");
-  document.querySelectorAll("#cards .card").forEach(el => el.onclick = () => clickCard(el.dataset.k));
+/* ---------- static UI ---------- */
+function buildButtons() {
+  $("types").innerHTML = [["", "ALL"], ...TYPES.map(t => [t[0], t[1]])]
+    .map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("");
+  $("scores").innerHTML = [[0, "ALL SCORES"], [70, "🔥 HOT (≥70)"], [50, "⚡ WARM (≥50)"], [30, "ACTIVE (≥30)"]]
+    .map(([m, l]) => `<button type="button" data-m="${m}">${l}</button>`).join("");
+  $("types").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    S.type = b.dataset.t; S.limit = 200; render();
+  });
+  $("scores").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    S.min = +b.dataset.m; S.limit = 200; render();
+  });
 }
 
-function activeKey() {
-  if ($("type").value) return $("type").value;
-  if (+$("score").value >= 70) return "hot";
-  if ($("addr").value === "yes") return "addr";
-  return "total";
+function stats(rs) {
+  $("s_total").textContent = rs.length.toLocaleString();
+  $("s_hot").textContent = rs.filter(r => r.score >= 70).length.toLocaleString();
+  $("s_warm").textContent = rs.filter(r => r.score >= 50 && r.score < 70).length.toLocaleString();
+  $("s_addr").textContent = rs.filter(hasAddr).length.toLocaleString();
+  $("legend").innerHTML = TYPES.map(([k, l, c]) =>
+    `<span><span class="dot" style="background:${c}"></span>${l.toLowerCase().replace(/\b\w/g, m => m.toUpperCase())}<b>${rs.filter(r => group(r) === k).length.toLocaleString()}</b></span>`).join("");
 }
 
-function clickCard(k) {
-  const same = k === activeKey() && k !== "total";
-  $("type").value = ""; $("score").value = "0"; $("addr").value = "";
-  if (!same) {
-    if (["pre", "jud", "lien", "pro"].includes(k)) $("type").value = k;
-    else if (k === "hot") $("score").value = "70";
-    else if (k === "addr") $("addr").value = "yes";
-  }
-  render();
-}
-
+/* ---------- filtering + sorting ---------- */
 function filtered() {
-  const q = $("q").value.toLowerCase().trim();
-  const t = $("type").value, s = +$("score").value, a = $("addr").value;
-  return DATA.records.filter(r =>
-    (!t || group(r) === t) &&
-    (r.score || 0) >= s &&
-    (!a || (a === "yes") === hasAddr(r)) &&
-    (!q || [r.owner, r.grantee, r.doc_num, r.prop_address, r.mail_address, r.legal, r.cat_label]
+  const q = ($("q").value || "").toLowerCase().trim();
+  const sort = $("sort").value || "score_desc";
+  let rs = DATA.records.filter(r =>
+    (!S.type || group(r) === S.type) &&
+    (r.score || 0) >= S.min &&
+    (!q || [r.owner, r.grantee, r.doc_num, r.prop_address, r.mail_address, r.prop_city, r.mail_city, r.legal, r.cat_label, r.doc_type]
         .join(" ").toLowerCase().includes(q)));
+  const cmp = {
+    score_desc: (a, b) => (b.score || 0) - (a.score || 0) || String(b.filed).localeCompare(String(a.filed)),
+    score_asc:  (a, b) => (a.score || 0) - (b.score || 0),
+    filed_desc: (a, b) => String(b.filed).localeCompare(String(a.filed)),
+    filed_asc:  (a, b) => String(a.filed).localeCompare(String(b.filed)),
+    amount_desc:(a, b) => (b.amount || 0) - (a.amount || 0),
+  }[sort];
+  return rs.sort(cmp);
 }
 
 function render() {
   const rs = filtered();
-  $("count").textContent = rs.length + " records";
-  const ak = activeKey();
-  document.querySelectorAll("#cards .card").forEach(el => el.classList.toggle("active", el.dataset.k === ak));
+  document.querySelectorAll("#types button").forEach(b => b.classList.toggle("on", b.dataset.t === S.type));
+  document.querySelectorAll("#scores button").forEach(b => b.classList.toggle("on", +b.dataset.m === S.min));
+  $("showing").innerHTML = `Showing <b>${rs.length.toLocaleString()}</b> of ${DATA.records.length.toLocaleString()} records`;
+
   if (!rs.length) {
-    $("rows").innerHTML = `<tr><td colspan="8" class="empty">No records match.</td></tr>`;
+    $("rows").innerHTML = `<tr><td colspan="12" class="empty">No records match.</td></tr>`;
+    $("more").style.display = "none";
     return;
   }
-  $("rows").innerHTML = rs.map(r => {
-    const sc = r.score >= 70 ? "hot" : r.score >= 50 ? "warm" : "";
-    const prop = [r.prop_address, r.prop_city].filter(Boolean).join(", ") || r.legal || "";
-    const flags = (r.flags || []).map(f =>
-      `<span class="chip ${f === "New this week" ? "new" : /foreclosure|Lis pendens/.test(f) ? "warn" : ""}">${esc(f)}</span>`).join("");
-    const amt = r.amount ? "$" + Number(r.amount).toLocaleString() : "—";
+  const shown = rs.slice(0, S.limit);
+  $("rows").innerHTML = shown.map(r => {
+    const g = group(r);
+    const tl = (TYPES.find(t => t[0] === g) || [0, String(r.cat_label || "OTHER").toUpperCase()])[1];
+    const flags = (r.flags || []).map(f => `<span class="chip ${f === "New this week" ? "new" : ""}">${esc(f)}</span>`).join("");
+    const amt = r.amount ? "$" + Number(r.amount).toLocaleString() : "";
     const link = /^https?:\/\//.test(r.clerk_url || "")
-      ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">VIEW →</a>` : "";
+      ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">#${esc(r.doc_num)}</a>` : "#" + esc(r.doc_num);
     return `<tr>
-      <td><span class="sc ${sc}">${esc(r.score)}</span></td>
-      <td><span class="tp">${esc(r.cat_label)}</span></td>
-      <td class="own"><b>${esc(r.owner)}</b><span>${esc(prop)}</span>${hasAddr(r) ? "" : '<span class="need"> · needs address</span>'}</td>
-      <td class="mut">${esc(r.filed)}</td>
-      <td class="mut">${amt}</td>
+      <td><span class="sc">${esc(r.score)}</span></td>
+      <td><span class="tp t-${g}">${esc(tl)}</span></td>
+      <td>${esc(r.cat)}</td>
+      <td>${esc(r.filed)}</td>
+      <td class="own" title="${esc(r.grantee)}">${esc(r.owner)}</td>
+      <td>${dash(propText(r))}</td>
+      <td>${dash(mailText(r))}</td>
+      <td>${amt ? esc(amt) : '<span class="dash">–</span>'}</td>
       <td>${flags}</td>
-      <td class="mut">${esc(r.doc_num)}</td>
-      <td>${link}<button type="button" class="ed" data-doc="${esc(r.doc_num)}">✎ EDIT</button></td></tr>`;
+      <td class="legal" title="${esc(r.legal)}">${esc(r.legal)}</td>
+      <td>${link}</td>
+      <td><button type="button" class="ed" data-doc="${esc(r.doc_num)}">✎ EDIT</button></td>
+    </tr>`;
   }).join("");
+  const more = $("more");
+  more.style.display = rs.length > S.limit ? "block" : "none";
+  more.textContent = `SHOW MORE (${(rs.length - S.limit).toLocaleString()} left)`;
 }
 
-/* ---------- GHL CSV (built in the browser from the records shown) ---------- */
-const CORP = /\b(LLC|INC|CORP|CORPORATION|CO|COMPANY|LTD|LP|LLP|TRUST|HOLDINGS|PROPERTIES|INVESTMENTS|ENTERPRISES|PARTNERS|BANK|ASSOCIATION|REALTY|GROUP|FUND)\b/i;
+/* ---------- GHL CSV ---------- */
+const CORP = /\b(LLC|INC|CORP|CORPORATION|CO|COMPANY|LTD|LP|LLP|TRUST|HOLDINGS|PROPERTIES|INVESTMENTS|ENTERPRISES|PARTNERS|BANK|ASSOCIATION|REALTY|GROUP|FUND|CITY|HOMEOWNERS|MORTGAGE|SERVICING|CAPITAL|HOMES|DIVISION)\b/i;
 function splitName(o) {
   o = (o || "").trim();
   if (!o) return ["", ""];
@@ -232,36 +281,35 @@ function splitName(o) {
   return [cap(t.slice(1).join(" ")), cap(t[0])];   // LAST FIRST [MIDDLE]
 }
 const csvCell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+function saveCSV(name, rows) {
+  const csv = rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = name; a.click();
+}
 function downloadGHL() {
   const cols = ["First Name","Last Name","Mailing Address","Mailing City","Mailing State","Mailing Zip",
     "Property Address","Property City","Property State","Property Zip","Lead Type","Document Type",
     "Date Filed","Document Number","Amount/Debt Owed","Seller Score","Motivated Seller Flags","Source","Public Records URL"];
-  const rows = filtered().map(r => {
+  saveCSV("ghl_export.csv", [cols, ...filtered().map(r => {
     const [f, l] = splitName(r.owner);
     return [f, l, r.mail_address, r.mail_city, r.mail_state, r.mail_zip,
       r.prop_address, r.prop_city, r.prop_state, r.prop_zip, r.cat_label, r.doc_type,
       r.filed, r.doc_num, r.amount || "", r.score, (r.flags || []).join("; "),
       "Jackson County Recorder of Deeds", r.clerk_url];
-  });
-  const csv = [cols, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
-  a.download = "ghl_export.csv";
-  a.click();
+  })]);
 }
-
 
 /* ---------- manual address entry (saved in this browser; export to keep) ---------- */
 const EK = "jc_edits_v1";
 let EDITS = {};
 try { EDITS = JSON.parse(localStorage.getItem(EK) || "{}"); } catch (e) { EDITS = {}; }
-const saveEdits = () => { try { localStorage.setItem(EK, JSON.stringify(EDITS)); } catch (e) {} };
+const persist = () => { try { localStorage.setItem(EK, JSON.stringify(EDITS)); } catch (e) {} };
 const EF = ["prop_address","prop_city","prop_state","prop_zip","mail_address","mail_city","mail_state","mail_zip","amount"];
 let editing = null;
 
 $("rows").addEventListener("click", ev => {
-  const b = ev.target.closest(".ed");
-  if (!b) return;
+  const b = ev.target.closest(".ed"); if (!b) return;
   editing = DATA.records.find(r => r.doc_num === b.dataset.doc);
   if (!editing) return;
   $("dtitle").textContent = editing.owner || "Lead";
@@ -277,39 +325,40 @@ $("dsave").onclick = () => {
   if (e.prop_address && !e.prop_state) e.prop_state = "MO";
   EDITS[editing.doc_num] = e;
   Object.assign(editing, e);
-  saveEdits();
+  persist();
   $("dlg").close();
-  cards(DATA.records); render();
+  stats(DATA.records); render();
 };
-
 $("enr").onclick = () => {
-  const cols = ["Document Number","Owner","Property Address","Property City","Property State","Property Zip",
-    "Mailing Address","Mailing City","Mailing State","Mailing Zip","Amount"];
   const rows = Object.keys(EDITS).map(doc => {
     const r = DATA.records.find(x => x.doc_num === doc) || {}, e = EDITS[doc];
     return [doc, r.owner || "", e.prop_address, e.prop_city, e.prop_state, e.prop_zip,
       e.mail_address, e.mail_city, e.mail_state, e.mail_zip, e.amount || ""];
   });
   if (!rows.length) { alert("Nothing saved yet. Use ✎ EDIT on a lead first."); return; }
-  const csv = [cols, ...rows].map(r => r.map(csvCell).join(",")).join("\r\n");
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
-  a.download = "enrichment.csv";
-  a.click();
+  saveCSV("enrichment.csv", [["Document Number","Owner","Property Address","Property City","Property State",
+    "Property Zip","Mailing Address","Mailing City","Mailing State","Mailing Zip","Amount"], ...rows]);
 };
 
-["q","type","score","addr"].forEach(id => $(id).addEventListener("input", render));
-$("clear").onclick = () => { $("q").value = ""; $("type").value = ""; $("score").value = "0"; $("addr").value = ""; render(); };
+/* ---------- wire up + load ---------- */
+$("q").addEventListener("input", () => { S.limit = 200; render(); });
+$("sort").addEventListener("change", () => render());
+$("more").onclick = () => { S.limit += 200; render(); };
 $("ghl").onclick = downloadGHL;
+buildButtons();
 
 fetch("records.json", {cache: "no-store"}).then(r => r.json()).then(d => {
   DATA = d;
-  DATA.records = (d.records || []).map(r => Object.assign(r, EDITS[r.doc_num] || {})).sort((a, b) => (b.score || 0) - (a.score || 0));
+  DATA.records = (d.records || []).map(r => Object.assign(r, EDITS[r.doc_num] || {}));
   const dr = d.date_range || {};
-  $("range").textContent = (dr.start || "") + " → " + (dr.end || "");
-  cards(DATA.records);
-  render();
-}).catch(() => { $("range").textContent = "no data yet"; cards([]); render(); });
+  $("s_range").innerHTML = dr.start
+    ? esc(dr.start.replace(/-/g, "/")) + "–<br>" + esc((dr.end || "").replace(/-/g, "/")) : "–";
+  if (d.fetched_at) {
+    const t = new Date(d.fetched_at);
+    $("upd").textContent = "Updated " + t.toLocaleString("en-US", {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  } else { $("upd").textContent = "No data yet"; }
+  stats(DATA.records); render();
+}).catch(() => { $("upd").textContent = "No data yet"; stats([]); render(); });
 </script>
 </body>
 </html>
