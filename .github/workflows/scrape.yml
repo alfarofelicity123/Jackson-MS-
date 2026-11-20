@@ -27,6 +27,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -53,14 +55,29 @@ jobs:
           path: data/debug/
           if-no-files-found: ignore
 
+      # A failed push must never block the website from updating.
       - name: Commit and push records
+        continue-on-error: true
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add dashboard/records.json data/records.json data/ghl_export.csv
-          git diff --cached --quiet || git commit -m "chore: update leads $(date -u +%Y-%m-%d)"
-          git pull --rebase origin "${GITHUB_REF_NAME}" || true
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore: update leads $(date -u +%Y-%m-%d)"
+          for i in 1 2 3; do
+            git fetch origin "${GITHUB_REF_NAME}"
+            # -X theirs = keep the freshly generated files if there is a conflict
+            if git rebase -X theirs "origin/${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            git rebase --abort || true
+            sleep 5
+          done
+          echo "Could not push after 3 tries (site will still deploy)"
+          exit 1
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
