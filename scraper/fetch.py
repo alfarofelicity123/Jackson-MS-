@@ -92,6 +92,8 @@ RETRIES = 3
 FUZZY_STRONG = int(os.getenv("FUZZY_STRONG") or "80")   # >= this: same person
 FUZZY_REVIEW = int(os.getenv("FUZZY_REVIEW") or "60")   # below this: no match
 USE_HISTORY = (os.getenv("USE_HISTORY") or "1") != "0"
+MIN_CONFIDENCE = (os.getenv("MIN_CONFIDENCE") or "MEDIUM").upper()   # LOW | MEDIUM | HIGH: weakest match allowed to fill addresses
+CONF_RANK = {"NONE": 0, "LOW": 1, "MEDIUM": 2, "HIGH": 3}
 UA = (
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/124.0 Safari/537.36"
@@ -112,6 +114,8 @@ log = logging.getLogger("scraper")
 LEAD_TYPES: List[Tuple[str, str, str]] = [
     ("RELLP", "Release Lis Pendens", r"release.*lis\s*pendens|rel.*\blp\b|lis\s*pendens.*release"),
     ("LP", "Lis Pendens", r"lis\s*pendens|^\s*lp\s*$"),
+    ("FCDEED", "Foreclosure Deed",
+     r"trustee'?s?\s*deed|deed under foreclosure|foreclosure\s*/\s*trustee|^\s*fc\s*$"),
     ("NOFC", "Notice of Foreclosure",
      r"notice of (foreclosure|trustee'?s?\s*sale|sale)|foreclos|trustee'?s?\s*sale"),
     ("TAXDEED", "Tax Deed", r"tax\s*deed|collector'?s?\s*deed|sheriff'?s?\s*deed.*tax"),
@@ -245,6 +249,9 @@ _SUFFIX = {"JR", "SR", "II", "III", "IV"}
 
 def norm_name(s: str) -> str:
     s = (s or "").upper().replace("&", " AND ")
+    s = re.sub(r"[\u2019`]", "'", s)          # curly apostrophes -> straight
+    s = re.sub(r"'S\b", "", s)                # HOMEOWNER'S -> HOMEOWNER (no stray "S")
+    s = s.replace("'", "")                     # O'BRIEN -> OBRIEN
     s = re.sub(r"[^A-Z0-9, ]+", " ", s)
     return re.sub(r"\s+", " ", s).strip()
 
@@ -623,6 +630,7 @@ PARCEL_COLS = {
     "mail_city": ["CITY", "MAILCITY", "MAIL_CITY"],
     "mail_state": ["STATE", "MAILSTATE", "MAIL_STATE"],
     "mail_zip": ["ZIP", "MAILZIP", "MAIL_ZIP", "ZIPCODE", "ZIP_CODE"],
+    "legal": ["LEGAL", "LEGAL_DESC", "LEGALDESC", "LEGAL_DESCR", "LEGAL1", "LEGALDESCRIPTION"],
 }
 
 
@@ -747,21 +755,39 @@ def load_parcels() -> Optional[Path]:
         return None
 
 
-_FUZZ_DROP = {"ESTATE", "DECEASED", "DESC", "DECD", "JR", "SR", "II", "III", "IV", "THE", "AND"}
+# Words that are noise when comparing names (guide: STRIP list)
+_FUZZ_DROP = {"ESTATE", "DECEASED", "DESC", "DECD", "JR", "SR", "II", "III", "IV", "THE", "AND",
+              "INC", "INCORPORATED", "LLC", "CORP", "CORPORATION", "ASSOCIATION", "HOMEOWNERS",
+              "COMMUNITY", "ASSOC", "TRUST", "TRUSTEE", "LIMITED", "OWNERS", "COMMITTEE",
+              "FOUNDATION", "ETAL", "UX"}
 
 
 def _fz_key(s: str) -> str:
-    """Name -> comparison key: upper, no punctuation, no suffix words."""
-    toks = [t for t in norm_name(s).replace(",", " ").split() if t not in _FUZZ_DROP]
+    """Name -> comparison key: upper, no punctuation/apostrophes, no ET AL, no noise words."""
+    n = re.sub(r"\bET\s+(AL|UX|VIR)\b", " ", norm_name(s))
+    toks = [t for t in n.replace(",", " ").split() if t not in _FUZZ_DROP]
     return " ".join(toks)
 
 
+def _legal_key(s: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^A-Z0-9]+", " ", (s or "").upper())).strip()
+
+
 class OwnerIndex(dict):
-    """Exact name-variant lookup (the dict itself) + comparison keys for fuzzy matching."""
+    """
+    The dict itself = exact name-variant lookup. Extra indexes:
+      names  : comparison key -> parcel info   (fuzzy)
+      prefix : first 2 / 3 words -> [parcel info]   (guide's prefix trick)
+      legal  : normalised legal description -> parcel info
+      dups   : name keys that belong to more than one different owner record
+    """
 
     def __init__(self) -> None:
         super().__init__()
         self.names: Dict[str, Dict[str, str]] = {}
+        self.prefix: Dict[str, List[Dict[str, str]]] = {}
+        self.legal: Dict[str, Dict[str, str]] = {}
+        self.dups: set = set()
         self._fz_list: List[str] = []
         self._fz_n = -1
 
@@ -770,6 +796,26 @@ class OwnerIndex(dict):
             self._fz_list = list(self.names)
             self._fz_n = len(self.names)
         return self._fz_list
+
+
+def index_parcel(lookup: "OwnerIndex", info: Dict[str, str]) -> None:
+    owner = info.get("owner", "")
+    for v in name_variants(owner):
+        prev = lookup.get(v)
+        if prev is None:
+            lookup[v] = info
+        elif prev.get("owner") != owner:
+            lookup.dups.add(v)
+    key = _fz_key(owner)
+    if key:
+        lookup.names.setdefault(key, info)
+        toks = key.split()
+        for n in (2, 3):
+            if len(toks) >= n:
+                lookup.prefix.setdefault(" ".join(toks[:n]), []).append(info)
+    lk = _legal_key(info.get("legal", ""))
+    if lk:
+        lookup.legal.setdefault(lk, info)
 
 
 def fuzzy_score(a: str, b: str) -> int:
@@ -819,64 +865,86 @@ def build_owner_lookup(dbf_path: Path) -> "OwnerIndex":
             if not owner:
                 continue
             info = {k: clean(row.get(c)) if c else "" for k, c in cols.items()}
-            for v in name_variants(owner):
-                lookup.setdefault(v, info)
-            key = _fz_key(owner)
-            if key:
-                lookup.names.setdefault(key, info)
+            index_parcel(lookup, info)
             n += 1
         except Exception:  # noqa: BLE001
             continue
-    log.info("Parcel lookup: %d parcels, %d name keys", n, len(lookup))
+    log.info("Parcel lookup: %d parcels, %d name keys, %d prefix keys, %d legal keys",
+             n, len(lookup), len(lookup.prefix), len(lookup.legal))
     return lookup
 
 
-def lookup_owner(lookup: Dict[str, Dict[str, str]], *names: str) -> Optional[Dict[str, str]]:
-    """Exact match on any name variant."""
+def _m(info: Optional[Dict[str, str]], score: Optional[int], conf: str, reason: str, review: bool = False) -> Dict[str, Any]:
+    return {"info": info, "score": score, "confidence": conf, "reason": reason, "review": review}
+
+
+def match_owner(lookup: Dict[str, Dict[str, str]], *names: str, legal: str = "") -> Dict[str, Any]:
+    """
+    Strategy order (guide): legal description -> exact name -> name prefix -> fuzzy.
+      HIGH   legal description matches a parcel exactly
+      MEDIUM exact name (single owner) or 3-word prefix with a single owner
+      LOW    2-word prefix, multiple owners share the name, or fuzzy >= FUZZY_STRONG
+      NONE   nothing usable; review=True when a fuzzy hit falls in FUZZY_REVIEW..STRONG-1
+    """
+    if not lookup:
+        return _m(None, None, "NONE", "")
+    # 1) legal description
+    lk = _legal_key(legal)
+    leg = getattr(lookup, "legal", None)
+    if lk and leg and lk in leg:
+        return _m(leg[lk], 100, "HIGH", "legal_description")
+    # 2) exact name variant
+    dups = getattr(lookup, "dups", set())
     for nm in names:
         for v in name_variants(nm):
             hit = lookup.get(v)
             if hit:
-                return hit
-    return None
-
-
-def match_owner(lookup: Dict[str, Dict[str, str]], *names: str) -> Tuple[Optional[Dict[str, str]], Optional[int], bool]:
-    """
-    Returns (parcel_info, match_score, needs_review).
-      exact name variant      -> score 100
-      fuzzy >= FUZZY_STRONG   -> accepted (strong match)
-      FUZZY_REVIEW..STRONG-1  -> NOT applied, flagged for manual review
-      below FUZZY_REVIEW      -> no match (score None)
-    """
-    if not lookup:
-        return None, None, False
-    hit = lookup_owner(lookup, *names)
-    if hit:
-        return hit, 100, False
+                multi = v in dups
+                return _m(hit, 100, "LOW" if multi else "MEDIUM", "name_multiple" if multi else "name_exact")
+    # 3) name prefix (first 2-3 words)
+    pref = getattr(lookup, "prefix", None)
+    if pref:
+        for nm in names:
+            toks = _fz_key(nm).split()
+            if len(toks) < 2:
+                continue
+            tries = ([(" ".join(toks[:3]), 3)] if len(toks) >= 3 else []) + \
+                    [(" ".join(toks[:2]), 2), (f"{toks[1]} {toks[0]}", 2)]
+            for key, n in tries:
+                lst = pref.get(key)
+                if lst:
+                    single = len({i.get("owner") for i in lst}) == 1
+                    conf = "MEDIUM" if (n == 3 and single) else "LOW"
+                    return _m(lst[0], fuzzy_score(nm, lst[0].get("owner", "")), conf,
+                              f"name_prefix_{n}" + ("" if single else "_multiple"))
+    # 4) fuzzy
     idx = getattr(lookup, "names", None)
-    if not idx:
-        return None, None, False
-    best_info, best_score = None, 0
-    for nm in names:
-        if not clean(nm) or is_corp(nm):
-            continue
-        key, sc = best_fuzzy(nm, lookup)  # type: ignore[arg-type]
-        if key and sc > best_score:
-            best_info, best_score = idx[key], sc
-    if best_score >= FUZZY_STRONG:
-        return best_info, best_score, False
-    if best_score >= FUZZY_REVIEW:
-        return None, best_score, True
-    return None, None, False
+    if idx:
+        best_info, best_score = None, 0
+        for nm in names:
+            if not clean(nm) or is_corp(nm):
+                continue
+            key, sc = best_fuzzy(nm, lookup)  # type: ignore[arg-type]
+            if key and sc > best_score:
+                best_info, best_score = idx[key], sc
+        if best_score >= FUZZY_STRONG:
+            return _m(best_info, best_score, "LOW", f"fuzzy_{best_score}")
+        if best_score >= FUZZY_REVIEW:
+            return _m(None, best_score, "NONE", "", True)
+    return _m(None, None, "NONE", "")
 
 
 def enrich(records: List[Dict[str, Any]], lookup: Dict[str, Dict[str, str]]) -> None:
     for r in records:
         try:
-            hit, score, review = match_owner(lookup, r["owner"], r["grantee"])
-            r["match_score"] = score
+            m = match_owner(lookup, r["owner"], r["grantee"], legal=r.get("legal", ""))
+            hit, review = m["info"], m["review"]
+            if hit and CONF_RANK.get(m["confidence"], 0) < CONF_RANK.get(MIN_CONFIDENCE, 1):
+                hit, review = None, True          # too weak to trust: leave blank, flag for review
+            r["match_score"] = m["score"]
             r["match_review"] = review
+            r["match_confidence"] = m["confidence"] if hit else "NONE"
+            r["match_reason"] = m["reason"] if hit else ""
             r.update({
                 "prop_address": hit["site_addr"] if hit else "",
                 "prop_city": (hit["site_city"] if hit else "") or "",
@@ -1080,6 +1148,7 @@ RECORD_KEYS = [
     "mail_address", "mail_city", "mail_state", "mail_zip",
     "clerk_url", "flags", "score",
     "match_score", "match_review", "needs_enrichment", "redacted", "first_seen", "scraped_at",
+    "match_confidence", "match_reason", "contact", "first_name", "last_name", "sources",
 ]
 _BOOL_KEYS = {"match_review", "needs_enrichment", "redacted"}
 _NONE_KEYS = {"amount", "match_score"}
@@ -1088,9 +1157,18 @@ _NONE_KEYS = {"amount", "match_score"}
 def finalise(records: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     out = []
     for r in records:
+        try:
+            r["contact"] = r.get("owner", "")                    # the person to reach (homeowner)
+            r["first_name"], r["last_name"] = split_name(r.get("owner", ""))
+        except Exception:  # noqa: BLE001
+            pass
         def dflt(k: str) -> Any:
             if k == "flags":
                 return []
+            if k == "sources":
+                return ["RECORDER"]
+            if k == "match_confidence":
+                return "NONE"
             if k in _BOOL_KEYS:
                 return False
             return None if k in _NONE_KEYS else ""
@@ -1102,7 +1180,8 @@ def write_outputs(records: List[Dict[str, Any]], start: datetime, end: datetime)
     payload = {
         "fetched_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": f"{SOURCE} - {COUNTY}, {STATE}",
-        "date_range": {"start": start.strftime("%Y-%m-%d"), "end": end.strftime("%Y-%m-%d")},
+        "date_range": {"start": start.strftime("%Y-%m-%d"), "end": end.strftime("%Y-%m-%d"),
+                       "from": start.strftime("%Y-%m-%d"), "to": end.strftime("%Y-%m-%d")},
         "total": len(records),
         "with_address": sum(1 for r in records if r.get("prop_address") or r.get("mail_address")),
         "records": records,
