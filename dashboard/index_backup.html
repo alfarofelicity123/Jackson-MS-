@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Jackson Intel · Motivated Seller Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0d12;--panel:#10151c;--panel2:#141b24;--bd:#1c2430;--fg:#dfe6ee;--mut:#6b7787;--acc:#3b9eff;--accd:#06101c;
+--mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--cond:"Barlow Condensed","Arial Narrow",Arial,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:12px/1.4 var(--mono)}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 28px;border-bottom:1px solid var(--bd);background:#080b0f}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:34px;height:34px}
+.brand h1{margin:0;font:700 20px var(--cond);letter-spacing:.06em;color:#fff}
+.brand small{display:block;font-size:9px;letter-spacing:.2em;color:var(--mut)}
+.upd{font-size:11px;color:var(--mut)}
+.upd i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#4ade80;margin-right:8px}
+main{padding:0 28px 40px;max-width:1700px;margin:0 auto}
+.stats{display:flex;gap:56px;flex-wrap:wrap;padding:26px 4px;border-bottom:1px solid var(--bd)}
+.st .n{font:700 38px/1 var(--cond);color:var(--acc);letter-spacing:.02em}
+.st .n.sm{font-size:30px;line-height:1.05}
+.st .l{font-size:10px;letter-spacing:.16em;color:var(--mut);margin-top:6px}
+.legend{display:flex;gap:26px;flex-wrap:wrap;padding:18px 4px;font-size:11px;color:#aab4c2}
+.legend b{font:700 14px var(--cond);color:#fff;margin-left:5px}
+.dot{display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:1px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px}
+.search{flex:1 1 320px;position:relative}
+.search input{width:100%;padding:11px 14px 11px 34px}
+.search:before{content:"⌕";position:absolute;left:12px;top:8px;color:var(--mut);font-size:15px}
+input,select,button{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:4px;font:inherit;padding:10px 14px}
+select{padding-right:8px}
+button{cursor:pointer;letter-spacing:.08em;font-size:11px}
+button:hover{border-color:var(--acc)}
+button.on{background:var(--acc);color:var(--accd);border-color:var(--acc);font-weight:700}
+.row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sp{margin-left:auto;display:flex;gap:10px}
+.showing{margin:16px 2px 10px;font-size:11px;color:var(--mut)}.showing b{color:#fff}
+.wrap{border:1px solid var(--bd);border-radius:6px;background:var(--panel);max-height:72vh;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1250px}
+th{position:sticky;top:0;background:#0d1219;z-index:2;font-size:9px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:13px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #161d27;vertical-align:middle}
+tr:hover td{background:var(--panel2)}
+.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #3a4453;background:#131920;color:#f1f5f9;font:700 14px var(--cond);border-radius:3px}
+.sc.warm{border-color:#6b4a1c;background:#241a0c;color:#ffa94d}
+.sc.hot{border-color:#6b2424;background:#2a1212;color:#ff5c5c}
+.tp{display:inline-block;padding:4px 9px;border-radius:3px;font-size:9px;letter-spacing:.12em;border:1px solid;white-space:nowrap}
+.t-lp{color:#ff6b6b;border-color:#5c2b2b;background:#241315}
+.t-fc{color:#ff9a4d;border-color:#5c3b1f;background:#241810}
+.t-tax{color:#f5c542;border-color:#5a4a16;background:#221c0c}
+.t-jud{color:#a78bfa;border-color:#40336b;background:#171329}
+.t-lien{color:#4da3ff;border-color:#1f4a7a;background:#0d1b2b}
+.t-pro{color:#4ade80;border-color:#1f5a38;background:#0e2217}
+.t-other{color:#aab4c2;border-color:#333c49;background:#161b22}
+.own{font-weight:700;color:#fff;max-width:240px}
+.dash{color:#3a4453}
+.chip{display:inline-block;margin:1px 5px 1px 0;font-size:10px;color:#8794a6;white-space:nowrap}
+.chip.new{color:#7ea9d8}
+.legal{max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9aa6b6}
+a{color:#4da3ff;text-decoration:none}a:hover{text-decoration:underline}
+.ed{padding:3px 8px;font-size:10px;color:#9fc4ee}
+.more{display:block;margin:16px auto}
+.empty{padding:34px;text-align:center;color:var(--mut)}
+dialog{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:8px;padding:22px;width:min(560px,94vw);font:12px var(--mono)}
+dialog::backdrop{background:rgba(0,0,0,.65)}
+dialog h3{margin:0 0 4px;font-size:14px}dialog .sub{color:var(--mut);font-size:11px;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid .full{grid-column:1/-1}
+.grid label{display:block;font-size:9px;letter-spacing:.14em;color:var(--mut);margin-bottom:4px}
+.grid input{width:100%;min-width:0}
+.sec{grid-column:1/-1;font-size:10px;letter-spacing:.16em;color:var(--acc);margin-top:6px}
+.acts{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.links{font-size:11px;margin-top:12px;color:var(--mut)}.links a{margin-right:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 40 40"><polygon points="20,2 36,11 36,29 20,38 4,29 4,11" fill="#0b2036" stroke="#3b9eff" stroke-width="2"/><text x="20" y="26" text-anchor="middle" font-family="Arial" font-weight="700" font-size="16" fill="#3b9eff">J</text></svg>
+    <div><h1>JACKSON INTEL</h1><small>MOTIVATED SELLER INTELLIGENCE</small></div>
+  </div>
+  <div class="upd"><i></i><span id="upd">loading…</span></div>
+</header>
+
+<main>
+  <section class="stats">
+    <div class="st"><div class="n" id="s_total">0</div><div class="l">TOTAL RECORDS</div></div>
+    <div class="st"><div class="n" id="s_hot">0</div><div class="l">HOT LEADS ≥70</div></div>
+    <div class="st"><div class="n" id="s_warm">0</div><div class="l">WARM LEADS 50-69</div></div>
+    <div class="st"><div class="n" id="s_addr">0</div><div class="l">WITH ADDRESS</div></div>
+    <div class="st"><div class="n sm" id="s_range">–</div><div class="l">DATE RANGE</div></div>
+  </section>
+
+  <section class="legend" id="legend"></section>
+
+  <div class="bar">
+    <div class="search"><input id="q" placeholder="Search owner, address, doc number, legal..."></div>
+    <select id="sort">
+      <option value="score_desc">Score: High → Low</option>
+      <option value="score_asc">Score: Low → High</option>
+      <option value="filed_desc">Filed: Newest</option>
+      <option value="filed_asc">Filed: Oldest</option>
+      <option value="amount_desc">Amount: High → Low</option>
+    </select>
+    <span id="types" style="display:flex;gap:10px;flex-wrap:wrap"></span>
+  </div>
+  <div class="row2">
+    <span id="scores" style="display:flex;gap:10px;flex-wrap:wrap"></span>
+    <span class="sp">
+      <button id="ghl">↓ GHL CSV</button>
+      <button id="enr" title="Download your typed-in addresses to save in GitHub">↓ ENRICHMENT CSV</button>
+    </span>
+  </div>
+
+  <div class="showing" id="showing">Showing <b>0</b> of 0 records</div>
+
+  <div class="wrap">
+    <table>
+      <thead><tr>
+        <th>SCORE</th><th>TYPE</th><th>DOC</th><th>FILED</th><th>OWNER / GRANTOR</th>
+        <th>PROPERTY ADDRESS</th><th>MAILING ADDRESS</th><th>AMOUNT</th><th>FLAGS</th>
+        <th>LEGAL DESC</th><th>DOC LINK</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <button id="more" class="more" style="display:none">SHOW MORE</button>
+</main>
+
+<dialog id="dlg">
+  <h3 id="dtitle">Edit lead</h3>
+  <div class="sub" id="dsub"></div>
+  <div class="grid">
+    <div class="sec">PROPERTY</div>
+    <div class="full"><label>PROPERTY ADDRESS</label><input id="e_prop_address"></div>
+    <div><label>CITY</label><input id="e_prop_city"></div>
+    <div><label>STATE</label><input id="e_prop_state" placeholder="MO"></div>
+    <div><label>ZIP</label><input id="e_prop_zip"></div>
+    <div><label>AMOUNT / DEBT OWED ($)</label><input id="e_amount" inputmode="decimal"></div>
+    <div class="sec">MAILING</div>
+    <div class="full"><label>MAILING ADDRESS</label><input id="e_mail_address"></div>
+    <div><label>CITY</label><input id="e_mail_city"></div>
+    <div><label>STATE</label><input id="e_mail_state"></div>
+    <div><label>ZIP</label><input id="e_mail_zip"></div>
+  </div>
+  <div class="links">Look up the owner:
+    <a href="https://payments.jacksongov.org" target="_blank" rel="noopener">Collector tax search</a>
+    <a href="https://www.jacksongov.org/Services/Parcel-Viewer" target="_blank" rel="noopener">Parcel viewer</a>
+  </div>
+  <div class="acts"><button id="dcancel" type="button">CANCEL</button><button id="dsave" type="button" class="on">SAVE</button></div>
+</dialog>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dash = v => v ? esc(v) : '<span class="dash">–</span>';
+
+let DATA = {records: []};
+const S = {type: "", min: 0, sort: "score_desc", limit: 200};
+
+/* ---------- categories ---------- */
+const TYPES = [
+  ["lp",   "LIS PENDENS",  "#ff6b6b"],
+  ["fc",   "FORECLOSURE",  "#ff9a4d"],
+  ["tax",  "TAX",          "#f5c542"],
+  ["jud",  "JUDGMENT",     "#a78bfa"],
+  ["lien", "LIEN",         "#4da3ff"],
+  ["pro",  "PROBATE",      "#4ade80"],
+];
+const group = r => {
+  const c = r.cat || "";
+  if (c === "LP") return "lp";
+  if (c === "NOFC") return "fc";
+  if (["TAXDEED","LNCORPTX","LNIRS","LNFED"].includes(c)) return "tax";
+  if (["JUD","CCJ","DRJUD"].includes(c)) return "jud";
+  if (c === "LN" || c === "LNMECH" || c === "LNHOA" || c === "MEDLN") return "lien";
+  if (c === "PRO") return "pro";
+  return "other";
+};
+const hasAddr = r => !!(r.prop_address || r.mail_address);
+const propText = r => [r.prop_address, r.prop_city].filter(Boolean).join(", ") + (r.prop_address && r.prop_zip ? " " + r.prop_zip : "");
+const mailText = r => r.mail_address
+  ? [r.mail_address, r.mail_city, [r.mail_state, r.mail_zip].filter(Boolean).join(" ")].filter(Boolean).join(", ") : "";
+
+/* ---------- static UI ---------- */
+function buildButtons() {
+  $("types").innerHTML = [["", "ALL"], ...TYPES.map(t => [t[0], t[1]])]
+    .map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("");
+  $("scores").innerHTML = [[0, "ALL SCORES"], [70, "🔥 HOT (≥70)"], [50, "⚡ WARM (≥50)"], [30, "ACTIVE (≥30)"]]
+    .map(([m, l]) => `<button type="button" data-m="${m}">${l}</button>`).join("");
+  $("types").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    S.type = b.dataset.t; S.limit = 200; render();
+  });
+  $("scores").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    S.min = +b.dataset.m; S.limit = 200; render();
+  });
+}
+
+function stats(rs) {
+  $("s_total").textContent = rs.length.toLocaleString();
+  $("s_hot").textContent = rs.filter(r => r.score >= 70).length.toLocaleString();
+  $("s_warm").textContent = rs.filter(r => r.score >= 50 && r.score < 70).length.toLocaleString();
+  $("s_addr").textContent = rs.filter(hasAddr).length.toLocaleString();
+  $("legend").innerHTML = TYPES.map(([k, l, c]) =>
+    `<span><span class="dot" style="background:${c}"></span>${l.toLowerCase().replace(/\b\w/g, m => m.toUpperCase())}<b>${rs.filter(r => group(r) === k).length.toLocaleString()}</b></span>`).join("");
+}
+
+/* ---------- filtering + sorting ---------- */
+function filtered() {
+  const q = ($("q").value || "").toLowerCase().trim();
+  const sort = $("sort").value || "score_desc";
+  let rs = DATA.records.filter(r =>
+    (!S.type || group(r) === S.type) &&
+    (r.score || 0) >= S.min &&
+    (!q || [r.owner, r.grantee, r.doc_num, r.prop_address, r.mail_address, r.prop_city, r.mail_city, r.legal, r.cat_label, r.doc_type]
+        .join(" ").toLowerCase().includes(q)));
+  const cmp = {
+    score_desc: (a, b) => (b.score || 0) - (a.score || 0) || String(b.filed).localeCompare(String(a.filed)),
+    score_asc:  (a, b) => (a.score || 0) - (b.score || 0),
+    filed_desc: (a, b) => String(b.filed).localeCompare(String(a.filed)),
+    filed_asc:  (a, b) => String(a.filed).localeCompare(String(b.filed)),
+    amount_desc:(a, b) => (b.amount || 0) - (a.amount || 0),
+  }[sort];
+  return rs.sort(cmp);
+}
+
+function render() {
+  const rs = filtered();
+  document.querySelectorAll("#types button").forEach(b => b.classList.toggle("on", b.dataset.t === S.type));
+  document.querySelectorAll("#scores button").forEach(b => b.classList.toggle("on", +b.dataset.m === S.min));
+  $("showing").innerHTML = `Showing <b>${rs.length.toLocaleString()}</b> of ${DATA.records.length.toLocaleString()} records`;
+
+  if (!rs.length) {
+    $("rows").innerHTML = `<tr><td colspan="12" class="empty">No records match.</td></tr>`;
+    $("more").style.display = "none";
+    return;
+  }
+  const shown = rs.slice(0, S.limit);
+  $("rows").innerHTML = shown.map(r => {
+    const g = group(r);
+    const tl = (TYPES.find(t => t[0] === g) || [0, String(r.cat_label || "OTHER").toUpperCase()])[1];
+    const flags = (r.flags || []).map(f => `<span class="chip ${f === "New this week" ? "new" : ""}">${esc(f)}</span>`).join("");
+    const amt = r.amount ? "$" + Number(r.amount).toLocaleString() : "";
+    const link = /^https?:\/\//.test(r.clerk_url || "")
+      ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">#${esc(r.doc_num)}</a>` : "#" + esc(r.doc_num);
+    return `<tr>
+      <td><span class="sc ${r.score >= 70 ? "hot" : r.score >= 40 ? "warm" : ""}">${esc(r.score)}</span></td>
+      <td><span class="tp t-${g}">${esc(tl)}</span></td>
+      <td>${esc(r.cat)}</td>
+      <td>${esc(r.filed)}</td>
+      <td class="own" title="${esc(r.grantee)}">${esc(r.owner)}</td>
+      <td>${dash(propText(r))}</td>
+      <td>${dash(mailText(r))}</td>
+      <td>${amt ? esc(amt) : '<span class="dash">–</span>'}</td>
+      <td>${flags}</td>
+      <td class="legal" title="${esc(r.legal)}">${esc(r.legal)}</td>
+      <td>${link}</td>
+      <td><button type="button" class="ed" data-doc="${esc(r.doc_num)}">✎ EDIT</button></td>
+    </tr>`;
+  }).join("");
+  const more = $("more");
+  more.style.display = rs.length > S.limit ? "block" : "none";
+  more.textContent = `SHOW MORE (${(rs.length - S.limit).toLocaleString()} left)`;
+}
+
+/* ---------- GHL CSV ---------- */
+const CORP = /\b(LLC|INC|CORP|CORPORATION|CO|COMPANY|LTD|LP|LLP|TRUST|HOLDINGS|PROPERTIES|INVESTMENTS|ENTERPRISES|PARTNERS|BANK|ASSOCIATION|REALTY|GROUP|FUND|CITY|HOMEOWNERS|MORTGAGE|SERVICING|CAPITAL|HOMES|DIVISION)\b/i;
+function splitName(o) {
+  o = (o || "").trim();
+  if (!o) return ["", ""];
+  if (CORP.test(o)) return ["", o];
+  if (o.includes(",")) { const [l, f] = o.split(",", 2); return [f.trim(), l.trim()]; }
+  const drop = new Set(["ESTATE","DECEASED","DESC","DECD","DEC'D","JR","SR","II","III","IV","I"]);
+  const t = o.toUpperCase().replace(/\./g, "").split(/\s+/).filter(x => !drop.has(x));
+  const cap = s => s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase());
+  if (!t.length) return ["", cap(o)];
+  if (t.length === 1) return ["", cap(t[0])];
+  return [cap(t.slice(1).join(" ")), cap(t[0])];   // LAST FIRST [MIDDLE]
+}
+const csvCell = v => '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"';
+function saveCSV(name, rows) {
+  const csv = rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type: "text/csv"}));
+  a.download = name; a.click();
+}
+function downloadGHL() {
+  const cols = ["First Name","Last Name","Mailing Address","Mailing City","Mailing State","Mailing Zip",
+    "Property Address","Property City","Property State","Property Zip","Lead Type","Document Type",
+    "Date Filed","Document Number","Amount/Debt Owed","Seller Score","Motivated Seller Flags","Source","Public Records URL"];
+  saveCSV("ghl_export.csv", [cols, ...filtered().map(r => {
+    const [f, l] = splitName(r.owner);
+    return [f, l, r.mail_address, r.mail_city, r.mail_state, r.mail_zip,
+      r.prop_address, r.prop_city, r.prop_state, r.prop_zip, r.cat_label, r.doc_type,
+      r.filed, r.doc_num, r.amount || "", r.score, (r.flags || []).join("; "),
+      "Jackson County Recorder of Deeds", r.clerk_url];
+  })]);
+}
+
+/* ---------- manual address entry (saved in this browser; export to keep) ---------- */
+const EK = "jc_edits_v1";
+let EDITS = {};
+try { EDITS = JSON.parse(localStorage.getItem(EK) || "{}"); } catch (e) { EDITS = {}; }
+const persist = () => { try { localStorage.setItem(EK, JSON.stringify(EDITS)); } catch (e) {} };
+const EF = ["prop_address","prop_city","prop_state","prop_zip","mail_address","mail_city","mail_state","mail_zip","amount"];
+let editing = null;
+
+$("rows").addEventListener("click", ev => {
+  const b = ev.target.closest(".ed"); if (!b) return;
+  editing = DATA.records.find(r => r.doc_num === b.dataset.doc);
+  if (!editing) return;
+  $("dtitle").textContent = editing.owner || "Lead";
+  $("dsub").textContent = editing.cat_label + " · " + editing.doc_num + " · " + (editing.legal || "");
+  EF.forEach(f => $("e_" + f).value = editing[f] == null ? "" : editing[f]);
+  $("dlg").showModal();
+});
+$("dcancel").onclick = () => $("dlg").close();
+$("dsave").onclick = () => {
+  if (!editing) return;
+  const e = {};
+  EF.forEach(f => { const v = $("e_" + f).value.trim(); e[f] = f === "amount" ? (parseFloat(v.replace(/[$,]/g, "")) || null) : v; });
+  if (e.prop_address && !e.prop_state) e.prop_state = "MO";
+  EDITS[editing.doc_num] = e;
+  Object.assign(editing, e);
+  persist();
+  $("dlg").close();
+  stats(DATA.records); render();
+};
+$("enr").onclick = () => {
+  const rows = Object.keys(EDITS).map(doc => {
+    const r = DATA.records.find(x => x.doc_num === doc) || {}, e = EDITS[doc];
+    return [doc, r.owner || "", e.prop_address, e.prop_city, e.prop_state, e.prop_zip,
+      e.mail_address, e.mail_city, e.mail_state, e.mail_zip, e.amount || ""];
+  });
+  if (!rows.length) { alert("Nothing saved yet. Use ✎ EDIT on a lead first."); return; }
+  saveCSV("enrichment.csv", [["Document Number","Owner","Property Address","Property City","Property State",
+    "Property Zip","Mailing Address","Mailing City","Mailing State","Mailing Zip","Amount"], ...rows]);
+};
+
+/* ---------- wire up + load ---------- */
+$("q").addEventListener("input", () => { S.limit = 200; render(); });
+$("sort").addEventListener("change", () => render());
+$("more").onclick = () => { S.limit += 200; render(); };
+$("ghl").onclick = downloadGHL;
+buildButtons();
+
+fetch("records.json", {cache: "no-store"}).then(r => r.json()).then(d => {
+  DATA = d;
+  DATA.records = (d.records || []).map(r => Object.assign(r, EDITS[r.doc_num] || {}));
+  const dr = d.date_range || {};
+  $("s_range").innerHTML = dr.start
+    ? esc(dr.start.replace(/-/g, "/")) + "–<br>" + esc((dr.end || "").replace(/-/g, "/")) : "–";
+  if (d.fetched_at) {
+    const t = new Date(d.fetched_at);
+    $("upd").textContent = "Updated " + t.toLocaleString("en-US", {month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"});
+  } else { $("upd").textContent = "No data yet"; }
+  stats(DATA.records); render();
+}).catch(() => { $("upd").textContent = "No data yet"; stats([]); render(); });
+</script>
+</body>
+</html>
