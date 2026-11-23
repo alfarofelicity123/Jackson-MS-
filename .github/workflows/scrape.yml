@@ -12,6 +12,9 @@ on:
       - "data/enrichment.csv"
       - "scraper/fetch.py"
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   contents: write
   pages: write
@@ -46,6 +49,21 @@ jobs:
           PARCEL_URL: ${{ vars.PARCEL_URL }}
           LOOKBACK_DAYS: ${{ vars.LOOKBACK_DAYS || '7' }}
         run: python scraper/fetch.py
+
+      - name: Print results
+        run: |
+          echo "=== Scrape Results ==="
+          python - <<'PY'
+          import json
+          d = json.load(open("data/records.json"))
+          rs = d["records"]
+          print("Total records:", d["total"])
+          print("With address:", sum(1 for r in rs if r.get("prop_address") or r.get("mail_address")))
+          print("Hot >=70:", sum(1 for r in rs if r.get("score", 0) >= 70))
+          from collections import Counter
+          print("By type:", dict(Counter(r.get("cat") for r in rs)))
+          print("Match confidence:", dict(Counter(r.get("match_confidence") for r in rs)))
+          PY
 
       - name: Upload debug artifacts (if any)
         if: always()
