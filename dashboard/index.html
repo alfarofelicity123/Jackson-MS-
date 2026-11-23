@@ -44,12 +44,16 @@ table{width:100%;border-collapse:collapse;min-width:1250px}
 th{position:sticky;top:0;background:#0d1219;z-index:2;font-size:9px;letter-spacing:.16em;color:var(--mut);text-align:left;padding:13px 12px;border-bottom:1px solid var(--bd);white-space:nowrap}
 td{padding:11px 12px;border-bottom:1px solid #161d27;vertical-align:middle}
 tr:hover td{background:var(--panel2)}
-.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #3a4453;background:#131920;color:#f1f5f9;font:700 14px var(--cond);border-radius:3px}
+.sc{display:inline-block;min-width:36px;text-align:center;padding:6px 8px;border:1px solid #333c49;background:#12171d;color:#8a96a6;font:700 14px var(--cond);border-radius:3px}
+.sc.act{border-color:#1f4a7a;background:#0b2036;color:#3b9eff}
 .sc.warm{border-color:#6b4a1c;background:#241a0c;color:#ffa94d}
 .sc.hot{border-color:#6b2424;background:#2a1212;color:#ff5c5c}
+.cf{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:3px;font-size:8px;letter-spacing:.1em;border:1px solid}
+.cf-high{color:#4ade80;border-color:#1f5a38}.cf-medium{color:#f5c542;border-color:#5a4a16}.cf-low{color:#ff9a4d;border-color:#5c3b1f}
 .tp{display:inline-block;padding:4px 9px;border-radius:3px;font-size:9px;letter-spacing:.12em;border:1px solid;white-space:nowrap}
 .t-lp{color:#ff6b6b;border-color:#5c2b2b;background:#241315}
 .t-fc{color:#ff9a4d;border-color:#5c3b1f;background:#241810}
+.t-fcd{color:#f472b6;border-color:#5c2547;background:#240f1b}
 .t-tax{color:#f5c542;border-color:#5a4a16;background:#221c0c}
 .t-jud{color:#a78bfa;border-color:#40336b;background:#171329}
 .t-lien{color:#4da3ff;border-color:#1f4a7a;background:#0d1b2b}
@@ -109,6 +113,7 @@ dialog h3{margin:0 0 4px;font-size:14px}dialog .sub{color:var(--mut);font-size:1
   <div class="row2">
     <span id="scores" style="display:flex;gap:10px;flex-wrap:wrap"></span>
     <span class="sp">
+      <button id="skip" title="First/last name + property and mailing address, ready for a skip tracer">↓ SKIP TRACE CSV</button>
       <button id="ghl">↓ GHL CSV</button>
       <button id="enr" title="Download your typed-in addresses to save in GitHub">↓ ENRICHMENT CSV</button>
     </span>
@@ -165,6 +170,7 @@ const S = {type: "", min: 0, sort: "score_desc", limit: 200};
 const TYPES = [
   ["lp",   "LIS PENDENS",  "#ff6b6b"],
   ["fc",   "FORECLOSURE",  "#ff9a4d"],
+  ["fcd",  "FORECLOSURE DEED", "#f472b6"],
   ["tax",  "TAX",          "#f5c542"],
   ["jud",  "JUDGMENT",     "#a78bfa"],
   ["lien", "LIEN",         "#4da3ff"],
@@ -174,6 +180,7 @@ const group = r => {
   const c = r.cat || "";
   if (c === "LP") return "lp";
   if (c === "NOFC") return "fc";
+  if (c === "FCDEED") return "fcd";
   if (["TAXDEED","LNCORPTX","LNIRS","LNFED"].includes(c)) return "tax";
   if (["JUD","CCJ","DRJUD"].includes(c)) return "jud";
   if (c === "LN" || c === "LNMECH" || c === "LNHOA" || c === "MEDLN") return "lien";
@@ -249,12 +256,12 @@ function render() {
     const link = /^https?:\/\//.test(r.clerk_url || "")
       ? `<a href="${esc(r.clerk_url)}" target="_blank" rel="noopener">#${esc(r.doc_num)}</a>` : "#" + esc(r.doc_num);
     return `<tr>
-      <td><span class="sc ${r.score >= 70 ? "hot" : r.score >= 40 ? "warm" : ""}">${esc(r.score)}</span></td>
+      <td><span class="sc ${r.score >= 70 ? "hot" : r.score >= 50 ? "warm" : r.score >= 30 ? "act" : ""}">${esc(r.score)}</span></td>
       <td><span class="tp t-${g}">${esc(tl)}</span></td>
       <td>${esc(r.cat)}</td>
       <td>${esc(r.filed)}</td>
       <td class="own" title="${esc(r.grantee)}">${esc(r.owner)}</td>
-      <td>${dash(propText(r))}</td>
+      <td>${dash(propText(r))}${r.match_confidence && r.match_confidence !== "NONE" ? `<span class="cf cf-${esc(String(r.match_confidence).toLowerCase())}" title="${esc(r.match_reason)}">${esc(r.match_confidence)}</span>` : ""}</td>
       <td>${dash(mailText(r))}</td>
       <td>${amt ? esc(amt) : '<span class="dash">–</span>'}</td>
       <td>${flags}</td>
@@ -299,6 +306,16 @@ function downloadGHL() {
       r.prop_address, r.prop_city, r.prop_state, r.prop_zip, r.cat_label, r.doc_type,
       r.filed, r.doc_num, r.amount || "", r.score, (r.flags || []).join("; "),
       "Jackson County Recorder of Deeds", r.clerk_url];
+  })]);
+}
+
+function downloadSkip() {
+  const cols = ["First Name","Last Name","Property Address","Property City","Property State","Property Zip",
+    "Mailing Address","Mailing City","Mailing State","Mailing Zip","Lead Type","Document Number","Seller Score"];
+  saveCSV("skiptrace_export.csv", [cols, ...filtered().map(r => {
+    const [f, l] = splitName(r.owner);
+    return [f, l, r.prop_address, r.prop_city, r.prop_state, r.prop_zip,
+      r.mail_address, r.mail_city, r.mail_state, r.mail_zip, r.cat_label, r.doc_num, r.score];
   })]);
 }
 
@@ -347,6 +364,7 @@ $("q").addEventListener("input", () => { S.limit = 200; render(); });
 $("sort").addEventListener("change", () => render());
 $("more").onclick = () => { S.limit += 200; render(); };
 $("ghl").onclick = downloadGHL;
+$("skip").onclick = downloadSkip;
 buildButtons();
 
 fetch("records.json", {cache: "no-store"}).then(r => r.json()).then(d => {
