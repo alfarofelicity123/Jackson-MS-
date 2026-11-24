@@ -1,11 +1,11 @@
 {
-  "fetched_at": "2026-11-23T08:57:16+00:00",
+  "fetched_at": "2026-11-24T08:26:46+00:00",
   "source": "Jackson County Recorder of Deeds - Jackson County, MO",
   "date_range": {
-    "start": "2026-11-16",
-    "end": "2026-11-23",
-    "from": "2026-11-16",
-    "to": "2026-11-23"
+    "start": "2026-11-17",
+    "end": "2026-11-24",
+    "from": "2026-11-17",
+    "to": "2026-11-24"
   },
   "total": 0,
   "with_address": 0,
