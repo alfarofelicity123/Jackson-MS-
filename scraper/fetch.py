@@ -1101,7 +1101,7 @@ def compute_flags(r: Dict[str, Any], new_cutoff: datetime) -> List[str]:
         flags.append("Mechanic lien")
     if c == "PRO" or ESTATE_RX.search(r.get("owner", "")) or ESTATE_RX.search(r.get("grantee", "")):
         flags.append("Probate / estate")
-    if is_corp(r.get("owner", "")):
+    if c != "FCDEED" and is_corp(r.get("owner", "")):   # a trustee on a foreclosure deed is not the owner
         flags.append("LLC / corp owner")
     d = parse_date(r.get("filed"))
     if d and d >= new_cutoff:
