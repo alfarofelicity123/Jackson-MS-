@@ -1,13 +1,13 @@
 {
-  "fetched_at": "2026-11-26T08:29:10+00:00",
+  "fetched_at": "2026-11-27T08:27:40+00:00",
   "source": "Jackson County Recorder of Deeds - Jackson County, MO",
   "date_range": {
-    "start": "2026-11-19",
-    "end": "2026-11-26",
-    "from": "2026-11-19",
-    "to": "2026-11-26"
+    "start": "2026-11-20",
+    "end": "2026-11-27",
+    "from": "2026-11-20",
+    "to": "2026-11-27"
   },
-  "total": 6,
+  "total": 4,
   "with_address": 0,
   "records": [
     {
@@ -31,16 +31,15 @@
       "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
       "flags": [
         "Judgment lien",
-        "Probate / estate",
-        "New this week"
+        "Probate / estate"
       ],
-      "score": 65,
+      "score": 50,
       "match_score": null,
       "match_review": false,
       "needs_enrichment": true,
       "redacted": false,
       "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
+      "scraped_at": "2026-11-27T08:27:40+00:00",
       "match_confidence": "NONE",
       "match_reason": "",
       "contact": "ULIBARRI NANCY ALICE ESTATE",
@@ -70,16 +69,15 @@
       "mail_zip": "",
       "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
       "flags": [
-        "Lis pendens",
-        "New this week"
+        "Lis pendens"
       ],
-      "score": 55,
+      "score": 40,
       "match_score": null,
       "match_review": false,
       "needs_enrichment": true,
       "redacted": false,
       "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
+      "scraped_at": "2026-11-27T08:27:40+00:00",
       "match_confidence": "NONE",
       "match_reason": "",
       "contact": "IQBAL ZAFAR",
@@ -109,16 +107,15 @@
       "mail_zip": "",
       "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
       "flags": [
-        "Judgment lien",
-        "New this week"
+        "Judgment lien"
       ],
-      "score": 55,
+      "score": 40,
       "match_score": null,
       "match_review": false,
       "needs_enrichment": true,
       "redacted": false,
       "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
+      "scraped_at": "2026-11-27T08:27:40+00:00",
       "match_confidence": "NONE",
       "match_reason": "",
       "contact": "SENZEE NICHOLAS",
@@ -147,82 +144,6 @@
       "mail_state": "",
       "mail_zip": "",
       "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
-      "flags": [
-        "New this week"
-      ],
-      "score": 45,
-      "match_score": null,
-      "match_review": false,
-      "needs_enrichment": true,
-      "redacted": false,
-      "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
-      "match_confidence": "NONE",
-      "match_reason": "",
-      "contact": "CODY HENDRICKS",
-      "first_name": "Hendricks",
-      "last_name": "Cody",
-      "sources": [
-        "RECORDER"
-      ]
-    },
-    {
-      "doc_num": "2026E0086273",
-      "doc_type": "JUDG",
-      "filed": "2026-11-19",
-      "cat": "JUD",
-      "cat_label": "Judgment",
-      "owner": "BEBBER JACK VAN",
-      "grantee": "KANSAS CITY MISSOURI HOMESTEADING AUTHORITY",
-      "amount": null,
-      "legal": "SEC 3 TWNSHP 49 RNG 33 NE NW",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "",
-      "mail_zip": "",
-      "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
-      "flags": [
-        "Judgment lien"
-      ],
-      "score": 40,
-      "match_score": null,
-      "match_review": false,
-      "needs_enrichment": true,
-      "redacted": false,
-      "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
-      "match_confidence": "NONE",
-      "match_reason": "",
-      "contact": "BEBBER JACK VAN",
-      "first_name": "Jack Van",
-      "last_name": "Bebber",
-      "sources": [
-        "RECORDER"
-      ]
-    },
-    {
-      "doc_num": "2026E0086081",
-      "doc_type": "LIEN",
-      "filed": "2026-11-19",
-      "cat": "LN",
-      "cat_label": "Lien",
-      "owner": "FORT HAYS STATE UNIVERSITY FOUNDATION",
-      "grantee": "LEES SUMMIT CITY",
-      "amount": null,
-      "legal": "SEC 10 TWNSHP 47 RNG 31 BEG SE COR TH N SEE INSTR",
-      "prop_address": "",
-      "prop_city": "",
-      "prop_state": "",
-      "prop_zip": "",
-      "mail_address": "",
-      "mail_city": "",
-      "mail_state": "",
-      "mail_zip": "",
-      "clerk_url": "https://aumentumweb.jacksongov.org/RealEstate/SearchEntry.aspx",
       "flags": [],
       "score": 30,
       "match_score": null,
@@ -230,12 +151,12 @@
       "needs_enrichment": true,
       "redacted": false,
       "first_seen": "2026-11-24T09:00:40+00:00",
-      "scraped_at": "2026-11-26T08:29:10+00:00",
+      "scraped_at": "2026-11-27T08:27:40+00:00",
       "match_confidence": "NONE",
       "match_reason": "",
-      "contact": "FORT HAYS STATE UNIVERSITY FOUNDATION",
-      "first_name": "Hays State University Foundation",
-      "last_name": "Fort",
+      "contact": "CODY HENDRICKS",
+      "first_name": "Hendricks",
+      "last_name": "Cody",
       "sources": [
         "RECORDER"
       ]
